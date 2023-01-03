@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 def horners_method(poly, x):
     # evaluates the poly given as list of coeffs at x
@@ -51,9 +52,10 @@ def newton_interpolation(x, y):
     for j in range(1, n):
         for i in range(n-j):
             d[i,j] = (d[i,j-1]-d[i+1,j-1])/(x[i]-x[i+j])
+    print(d)
     return d[0,:]
 
-print(newton_interpolation([0,1,2,3],[-1,0,5,20]))
+#newton_interpolation([0,1,2,3],[-1,0,5,20])
     
 def evaluate_newton_polynomial(c, x, x0):
     # evaluate polynomial given in newton form    
@@ -62,8 +64,29 @@ def evaluate_newton_polynomial(c, x, x0):
         y = y*(x0 -x[j]) + c[j]
     return y
     
-print(evaluate_newton_polynomial([-1,1,2,1],[0,1,2,3],1))
+#print(evaluate_newton_polynomial([-1,1,2,1],[0,1,2,3],1))
 
 
-def hermite_interpolation():
+def hermite_interpolation(vals, num_ys):
+    # compute hermite interpolation
+    # vals is a list of lists: vals = [ [x,[y,y_prime,y_pp,...]],... ]
     pass
+
+
+def cubic_spline_interpolation():
+    pass
+
+def plot_polynomials(polys, x):
+    # get y values
+    ys = [[horners_method(p, i) for i in x] for p in polys]
+    for y in ys:
+        plt.plot(x,y)
+    plt.show()
+        
+#plot_polynomial([[2,3,0],[1,2,0]],np.linspace(-1,1,20))
+
+
+def tschebyscheff_nodes(n, x):
+    nodes = []
+    
+    
