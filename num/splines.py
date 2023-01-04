@@ -1,4 +1,5 @@
 import numpy as np
+from polynomials import horners_method
 
 def compute_coeffs(moments, y, h):
     coeffs = []
@@ -7,16 +8,10 @@ def compute_coeffs(moments, y, h):
         coeffs_j.append(y[j]) #aj
         coeffs_j.append((y[j+1]-y[j])/h[j]-(h[j]/6)*(moments[j+1]+2*moments[j])) #bj
         coeffs_j.append(moments[j]/2) #cj
-        coeffs_j.append((moments[j+1]-moments[j])/(6*h[j]))
+        coeffs_j.append((moments[j+1]-moments[j])/(6*h[j])) #dj
 
         coeffs.append(coeffs_j)
     return coeffs
-
-def compute_rhs(y, h):
-    rhs = []
-    for j in range(1,len(y)-1):
-        rhs.append((6*(y[j+1]-y[j]))/h[j]-(6*(y[j]-y[j-1]))/h[j-1])
-    return rhs
         
 def compute_h(x):
     h = []
@@ -24,43 +19,64 @@ def compute_h(x):
         h.append(x[i+1]-x[i])
     return h
 
-def fill_matrix(n, h):
-    d = np.zeros((n-1,n-1))
+def fill_matrix(h, v):
+    n = len(v) # 2<-n-1 3<-n 4<-number of points
+    A = np.zeros((n,n))
     
-    if n-1==1:
-        d[0,0] = 2*(h[0]*h[1])
+    for i in range(n):
+        A[i,i] = v[i]
+    for i in range(n-1):
+        A[i+1,i] = h[i]
+        A[i,i+1] = h[i]
+    return A
     
-    else:
-        # fill diagonal
-        for i in range(d.shape[0]-1):
-            d[i,i] = 2*(h[i]+h[i+1])
-        
-        print(d.shape[0])
-        for i in range(d.shape[0]-1):
-            d[1+i,i] = h[i+1]
-            d[i,1+i] = h[i+1]
-    
-    return d
-            
-    
-    
+def compute_b(y, h):
+    b = []
+    for i in range(len(y)-1):
+        b.append((1/h[i])*(y[i+1]-y[i]))
+    return b
+
+
+def compute_v(h):
+    v = []
+    for i in range(1,len(h)):
+        v.append(2*(h[i-1]+h[i]))
+    return v
+
+def compute_u(b):
+    u = []
+    for i in range(1,len(b)):
+        u.append(6*(b[i]-b[i-1]))
+    return u
+
+
 
 def cubic_spline_interpolation(x,y):
-    # cond is either natural, complete or None, then it is not-a-knot
-    n = len(x)-1
-    print(n)
     h = compute_h(x)
-    print(h)
-    rhs = compute_rhs(y, h)
-    print(rhs)
-    d = fill_matrix(n, h)
-    print(d)
-    print(d.shape, len(rhs))
-    moments = np.linalg.solve(d,rhs)
-    print(moments)
-    coeffs = compute_coeffs(moments, y, h)
+    b = compute_b(y, h)
+    v = compute_v(h)
+    u = compute_u(b) # rhs
+    A = fill_matrix(h, v)
+    print(A)
+    z = list(np.linalg.solve(A,u))
+    z.insert(0, 0)
+    z.append(0)
+    coeffs = compute_coeffs(z, y, h)
     return coeffs
+    
 
-
-c = cubic_spline_interpolation([1,3,4],[2,4,2])
+c = cubic_spline_interpolation([0.9,1.3,1.9,2.1],[1.3,1.5,1.85,2.1])
 print(c) # [[2,2,0,-0.25],[4,-1,-1.5,0.5]]
+
+
+import matplotlib.pyplot as plt
+def plot_cubic_spline(coeffs, nodes, domains):
+    ys = [horners_method(c[::-1], domains[i], shift=nodes[i]) for i,c in enumerate(coeffs)]
+    
+    
+    for i,y in enumerate(ys):
+        plt.plot(domains[i],y)
+    plt.show()
+    
+    
+plot_cubic_spline(c, [0.9,1.3,1.9,2.1], [np.linspace(0.9,1.3,50),np.linspace(1.3,1.9,50),np.linspace(1.9,2.1,50)])

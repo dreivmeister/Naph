@@ -2,13 +2,13 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-def horners_method(poly, x):
+def horners_method(poly, x, shift=0):
     # evaluates the poly given as list of coeffs at x
     # poly = [a_n,a_n-1,...,a_1,a_0]
     
     poly_at_x = poly[0]
     for i in range(1, len(poly)):
-        poly_at_x = poly_at_x * x + poly[i]
+        poly_at_x = poly_at_x * (x-shift) + poly[i]
     return poly_at_x
 
 #print(horners_method([1,0,0],2))
