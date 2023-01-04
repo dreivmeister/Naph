@@ -72,10 +72,6 @@ def hermite_interpolation(vals, num_ys):
     # vals is a list of lists: vals = [ [x,[y,y_prime,y_pp,...]],... ]
     pass
 
-
-def cubic_spline_interpolation():
-    pass
-
 def plot_polynomials(polys, x):
     # get y values
     ys = [[horners_method(p, i) for i in x] for p in polys]
