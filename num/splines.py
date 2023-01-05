@@ -50,6 +50,21 @@ def compute_u(b):
     return u
 
 
+def TDMA(A,b):
+    # elim
+    for i in range(1, A.shape[0]):
+        m = A[i,i-1]/A[i-1,i-1]
+        A[i,i] = A[i,i] - m*A[i-1,i]
+        b[i] = b[i] - m*b[i-1]
+    # back sub
+    x = [b[-1]/A[-1,-1]]
+    for i in range(A.shape[0]-2, -1, -1):
+        x.append((b[i]-A[i,i+1]*x[-1])/A[i,i])
+    return x
+        
+    
+
+
 
 def cubic_spline_interpolation(x,y):
     h = compute_h(x)
@@ -57,25 +72,32 @@ def cubic_spline_interpolation(x,y):
     v = compute_v(h)
     u = compute_u(b) # rhs
     A = fill_matrix(h, v)
-    print(A)
-    z = list(np.linalg.solve(A,u))
-    z.insert(0, 0)
+    #print(A)
+    z = TDMA(A, u)
+    z.insert(0,0)
     z.append(0)
+    z = z[::-1]
     coeffs = compute_coeffs(z, y, h)
     return coeffs
     
 
 c = cubic_spline_interpolation([0.9,1.3,1.9,2.1],[1.3,1.5,1.85,2.1])
-print(c) # [[2,2,0,-0.25],[4,-1,-1.5,0.5]]
+#print(c) # [[2,2,0,-0.25],[4,-1,-1.5,0.5]]
 
 
 import matplotlib.pyplot as plt
 def plot_cubic_spline(coeffs, nodes, domains):
     ys = [horners_method(c[::-1], domains[i], shift=nodes[i]) for i,c in enumerate(coeffs)]
     
+    # plot nodes
+    y_nodes = []
+    for i in range(len(nodes)-1):
+        y_nodes.append(horners_method(coeffs[i][::-1],nodes[i],shift=nodes[i]))
+    y_nodes.append(horners_method(coeffs[-1][::-1],nodes[-1],nodes[-2]))
     
     for i,y in enumerate(ys):
         plt.plot(domains[i],y)
+    plt.scatter(nodes,y_nodes)
     plt.show()
     
     
