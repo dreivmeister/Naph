@@ -84,30 +84,96 @@ def LU_partial_solve(P,L,U,b):
 
 def cholesky_decomposition(A):
     # assume for now A is symmetric and positive definite
-    # one-based indexing
     n = A.shape[0]
     L = np.zeros((n,n))
     
-    for j in range(n):
-        for i in range(j+1,n):
+    for i in range(n):
+        for j in range(i+1):
+            s = 0
+            for k in range(j):
+                s += L[i,k]*L[j,k]
+            
             if i == j:
-                s = 0
-                for k in range(j):
-                    s += L[j,k]**2
-                L[j,j] = np.sqrt(A[j,j]-s)
+                L[i,j] = np.sqrt(A[i,i]-s)
             else:
-                s = 0
-                for k in range(j):
-                    s += L[i,k]*L[j,k]
-                L[i,j] = (A[i,j] - s)/L[j,j]
+                L[i,j] = 1.0/L[j,j]*(A[i,j]-s)
     return L
 
 
-A = np.array([
-    [1,1,2,3],
-    [1,5,4,7],
-    [2,4,14,11],
-    [3,7,11,30]
-])
-L = cholesky_decomposition(A)
-print(L)
+# A = np.array([
+#     [1,1,2,3],
+#     [1,5,4,7],
+#     [2,4,14,11],
+#     [3,7,11,30]
+# ])
+# L = cholesky_decomposition(A)
+# print(L)
+
+
+def householder(x):
+    alpha = x[0]
+    s = np.power(np.linalg.norm(x[1:]), 2)
+    v = x.copy()
+
+    if s == 0:
+        tau = 0
+    else:
+        t = np.sqrt(alpha**2 + s)
+        v[0] = alpha - t if alpha <= 0 else -s / (alpha + t)
+
+        tau = 2 * v[0]**2 / (s + v[0]**2)
+        v /= v[0]
+
+    return v, tau
+
+def qr_decomposition(A):
+    m,n = A.shape
+    R = A.copy()
+    Q = np.identity(m)
+
+    for j in range(0, n):
+        # Apply Householder transformation.
+        v, tau = householder(R[j:, j])
+        H = np.identity(m)
+        H[j:, j:] -= tau * v @ v.T
+        R = H @ R
+        Q = H @ Q
+
+    return Q[:n].T, R[:n]
+
+
+def householder_vectorized(a):
+    """Use this version of householder to reproduce the output of np.linalg.qr 
+    exactly (specifically, to match the sign convention it uses)
+    
+    based on https://rosettacode.org/wiki/QR_decomposition#Python
+    """
+    v = a / (a[0] + np.copysign(np.linalg.norm(a), a[0]))
+    v[0] = 1
+    tau = 2 / (v.T @ v)
+    
+    return v,tau
+
+
+def qr_decomposition(A: np.ndarray):
+    m,n = A.shape
+    R = A.copy()
+    Q = np.identity(m)
+    
+    for j in range(0, n):
+        # Apply Householder transformation.
+        v, tau = householder_vectorized(R[j:, j, np.newaxis])
+        
+        H = np.identity(m)
+        H[j:, j:] -= tau * (v @ v.T)
+        R = H @ R
+        Q = H @ Q
+        
+    return Q[:n].T, np.triu(R[:n])
+
+m = 5
+n = 4
+
+A = np.random.rand(m, n)
+q, r = np.linalg.qr(A)
+Q, R = qr_decomposition(A)
