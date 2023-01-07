@@ -34,10 +34,39 @@ def nodes_of_graph_bfs(graph, start):
                     nodes_of_graph.append(neigh)
                     Q.append(neigh)
         return nodes_of_graph
+    
     visited = set()
     nodes = []
     return bfs(start, nodes, visited)
 
+
+def single_source_shortest_path(graph, start, goal):
+    from collections import deque
+    
+    def bfs(start, goal, visited):
+        Q = deque()
+        parents = [-1]*len(graph)
+        visited.add(start)
+        Q.append(start)
+        while len(Q) > 0:
+            v = Q.popleft()
+            if v == goal:
+                shortest_path = [v]
+                while parents[v] != -1:
+                    shortest_path.append(parents[v])
+                    v = parents[v]
+                return shortest_path[::-1]
+            for neigh in graph[v].get_neighbors():
+                if neigh not in visited:
+                    visited.add(neigh)
+                    # add parent
+                    parents[neigh] = v
+                    Q.append(neigh)
+        return None
+    
+    visited = set()
+    return bfs(start, goal, visited)
+        
 
 
 
@@ -45,6 +74,6 @@ def nodes_of_graph_bfs(graph, start):
 
 if __name__=='__main__':
     graph = load_graph('graphconfig.txt')
-    nodes = nodes_of_graph_bfs(graph, graph[0].get_id())
-    print(nodes)
+    nodes = single_source_shortest_path(graph, graph[0].get_id(), graph[-1].get_id())
+    print(nodes) #[0,2,3,5]
     
