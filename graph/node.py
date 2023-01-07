@@ -9,7 +9,8 @@ class GraphNode(NodeInterface):
         self.val = val
         # contains ids of neighbor nodes (unweighted graph)
         # contains (id,weight) tuple of neighbor nodes (weighted graph)
-        self.neighbors = neighbors
+        self.neighbors = neighbors #outgoing edges
+        self.incoming_edges = None
         self.weighted = weighted
     
     def get_neighbors(self):
@@ -24,6 +25,10 @@ class GraphNode(NodeInterface):
     
     def print_data(self):
         print(f"id: {self.id} neighs: {self.neighbors}")
+        
+
+        
+        
         
 
 class Graph:

@@ -33,4 +33,17 @@ def load_graph(path):
     
     return graph_nodes
                 
-            
+def compute_incoming_edges(graph):
+    # assume unweighted graph (list of GraphNode object)
+    L = []
+    for i in range(len(graph)):
+        v = graph[i].get_id()
+        inc_edges = []
+        for j in range(len(graph)):
+            n = graph[j].get_id()
+            e = graph[j].get_neighbors()
+            if v in e and v != n:
+                inc_edges.append(n)
+        L.append([v, inc_edges])
+    return L
+    

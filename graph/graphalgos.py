@@ -1,5 +1,4 @@
-from node import GraphNode
-from utils import load_graph
+from utils import load_graph, compute_incoming_edges
 
 def nodes_of_graph_dfs(graph, curr):
     def dfs(curr,nodes_of_graph,visited):
@@ -59,21 +58,39 @@ def single_source_shortest_path(graph, start, goal):
             for neigh in graph[v].get_neighbors():
                 if neigh not in visited:
                     visited.add(neigh)
-                    # add parent
                     parents[neigh] = v
                     Q.append(neigh)
         return None
     
     visited = set()
     return bfs(start, goal, visited)
-        
 
 
-
+def topological_sort_kahn(graph):
+    L = []
+    inc_edges = compute_incoming_edges(graph)
+    S = set()
+    for node in inc_edges:
+        if node[1] == []:
+            S.add(node[0])
+    while len(S) > 0:
+        n = S.pop()
+        L.append(n)
+        for neigh in graph[n].get_neighbors():
+            graph[n].get_neighbors().remove(neigh)
+            if inc_edges[neigh][1] == []:
+                S.add(neigh)
+    return L
+            
+            
+    
+    
 
 
 if __name__=='__main__':
     graph = load_graph('graphconfig.txt')
-    nodes = single_source_shortest_path(graph, graph[0].get_id(), graph[-1].get_id())
+    nodes = single_source_shortest_path(graph, graph[2].get_id(), graph[-1].get_id())
     print(nodes) #[0,2,3,5]
+    
+    print(topological_sort_kahn(graph))
     
