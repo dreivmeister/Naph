@@ -34,8 +34,9 @@ def load_graph(path):
     # for i in range(len(graph_nodes)):
     #     graph_nodes[i].print_data()
     
-    return graph_nodes
-                
+    return sorted(graph_nodes, key=lambda x: x.get_id())
+   
+   
 def compute_incoming_edges(graph):
     # assume unweighted graph (list of GraphNode object)
     L = []
