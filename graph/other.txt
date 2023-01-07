@@ -1,0 +1,36 @@
+False #weighted (False) or unweighted (True)
+False #without node vals (False) or with node vals(True)
+#id neig
+0 1,2
+1 0  
+2 2
+3 0,1
+
+
+True #weighted (False) or unweighted (True)
+False #without node vals (False) or with node vals(True)
+#id neigh+w
+0 (1,2);(2,4)
+1 (0,1)  
+2 (2,9)
+3 (0,4);(1,7)
+
+
+
+
+True #weighted (False) or unweighted (True)
+True #without node vals (False) or with node vals(True)
+#id val neigh+w
+0 3 (1,2);(2,4)
+1 7 (0,1)  
+2 9 (2,9)
+3 2 (0,4);(1,7)
+
+
+False #weighted (False) or unweighted (True)
+True #without node vals (False) or with node vals(True)
+#id val neigh
+0 3 1,2
+1 7 0  
+2 9 2
+3 2 0,1

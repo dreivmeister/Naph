@@ -34,4 +34,3 @@ def load_graph(path):
     return graph_nodes
                 
             
-load_graph('graphconfig.txt')

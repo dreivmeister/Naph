@@ -1,8 +1,9 @@
-True #weighted (False) or unweighted (True)
+False #weighted (False) or unweighted (True)
 False #without node vals (False) or with node vals(True)
-#id neigh+w
-0 (1,2);(2,4)
-1 (0,1)  
-2 (2,9)
-3 (0,4);(1,7)
-
+#id neig
+0 1,2
+1 4  
+2 3
+3 5
+4 4 # if no outgoing, add self edge
+5 5
