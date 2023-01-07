@@ -21,7 +21,10 @@ def load_graph(path):
             # handle all 4 cases
             if weighted == 'False' and vals == 'False':
                 id, n = line.split(sep=' ')
-                neighbors = [int(i) for i in n.split(sep=',')]
+                if n == '-1':
+                    neighbors = []
+                else:
+                    neighbors = [int(i) for i in n.split(sep=',')]
                 graph_nodes.append(GraphNode(id=int(id),neighbors=neighbors))
             if weighted == 'True' and vals == 'False':
                 id, n = line.split(sep=' ')
