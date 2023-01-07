@@ -1,0 +1,8 @@
+True #weighted (False) or unweighted (True)
+False #without node vals (False) or with node vals(True)
+#id neigh+w
+0 (1,2);(2,4)
+1 (0,1)  
+2 (2,9)
+3 (0,4);(1,7)
+
