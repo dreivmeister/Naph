@@ -130,13 +130,68 @@ def dijkstras_algorithm(graph, source):
     return dist, prev
 
 
+def add_edges(graph, node, queue, vis):
+    vis[node] = True # mark node as visited
+    
+    edges = graph[node].get_neighbors()
+    for edge in edges:
+        to, w = edge
+        if vis[to] != True:
+            from_to_w = (node,) + edge
+            queue.append(from_to_w)
+    #return queue, vis
+
+def get_min_node(queue):
+    min_w = float("inf")
+    min_node = None
+    for node in queue:
+        if node[2] < min_w:
+            min_w = node[2]
+            min_node = node
+    return min_node
+
+def prims_algorithm(graph, start):
+    n = len(graph) # num vertices graph
+    m = n-1 # num vertices mst
+    edgeCount, mstCost = 0,0
+    pq = [] # priority queue
+    visited = [False]*n # visited array for graph
+    mstEdges = [None]*m # stores the edges in the mst
+    add_edges(graph, start, pq, visited)
+    
+    while len(pq) > 0 and edgeCount != m:
+        edge = get_min_node(pq)
+        pq.remove(edge)
+        nodeIndex = edge[1]
+        
+        if visited[nodeIndex]:
+            continue
+        
+        mstEdges[edgeCount] = edge
+        edgeCount += 1
+        mstCost += edge[2]
+        
+        add_edges(graph, nodeIndex, pq, visited)
+        
+    if edgeCount != m:
+        return None
+    return mstCost, mstEdges
+
+
+
 if __name__=='__main__':
     graph = load_graph('graphconfig.txt')
     #nodes = single_source_shortest_path(graph, graph[2].get_id(), graph[-1].get_id())
     #print(nodes) #[0,2,3,5]
     
-    dist, prev = dijkstras_algorithm(graph, 0)
-    print(dist)
-     
+    # dist, prev = dijkstras_algorithm(graph, 0)
+    # print(dist)
+    
     #print(topological_sort_kahn(graph))
+    
+    c, edges = prims_algorithm(graph, 0)
+    print(c)
+    print(edges)
+    
+    
     

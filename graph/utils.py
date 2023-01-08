@@ -5,6 +5,7 @@ from ast import literal_eval
 def load_graph(path):
     weighted = False
     vals = False
+    directed = False
     graph_nodes = []
     with open(path) as file:
         for i,line in enumerate(file):
