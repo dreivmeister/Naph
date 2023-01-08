@@ -155,7 +155,7 @@ def householder_vectorized(a):
     return v,tau
 
 
-def qr_decomposition(A: np.ndarray):
+def qr_decomposition(A: np.ndarray, snake=False):
     m,n = A.shape
     R = A.copy()
     Q = np.identity(m)
@@ -163,17 +163,30 @@ def qr_decomposition(A: np.ndarray):
     for j in range(0, n):
         # Apply Householder transformation.
         v, tau = householder_vectorized(R[j:, j, np.newaxis])
-        
         H = np.identity(m)
         H[j:, j:] -= tau * (v @ v.T)
         R = H @ R
         Q = H @ Q
-        
-    return Q[:n].T, np.triu(R[:n])
+    return Q[:n], np.triu(R[:n])
 
-m = 5
-n = 4
+def overdetermined_linear_system_solve(A, b):
+    Q,R = qr_decomposition(A)
+    bs = Q@b
+    x = np.linalg.solve(R,bs)
+    return x
 
-A = np.random.rand(m, n)
-q, r = np.linalg.qr(A)
-Q, R = qr_decomposition(A)
+if __name__=="__main__":
+    # m = 5
+    # n = 3
+
+    # A = np.random.rand(m, n)
+    # print(A)
+    #q, r = np.linalg.qr(A)
+    #Q, R = qr_decomposition(A, snake=True)
+    
+    
+    
+    A = np.array([[1,-1/4,1/16],[1,1/2,1/4],[1,2,4],[1,5/2,25/4]])
+    b = np.array([0,1,0,1])
+    
+    print(overdetermined_linear_system_solve(A,b))

@@ -103,7 +103,6 @@ def get_min_dist_node(queue, dist):
             min_node = u
     return min_node
         
-
 def dijkstras_algorithm(graph, source):
     n = len(graph)
     dist = [float("inf")]*n
@@ -139,7 +138,6 @@ def add_edges(graph, node, queue, vis):
         if vis[to] != True:
             from_to_w = (node,) + edge
             queue.append(from_to_w)
-    #return queue, vis
 
 def get_min_node(queue):
     min_w = float("inf")
@@ -160,7 +158,7 @@ def prims_algorithm(graph, start):
     add_edges(graph, start, pq, visited)
     
     while len(pq) > 0 and edgeCount != m:
-        edge = get_min_node(pq)
+        edge = get_min_node(pq) # (from, to, edge_weight)
         pq.remove(edge)
         nodeIndex = edge[1]
         
@@ -189,7 +187,7 @@ if __name__=='__main__':
     
     #print(topological_sort_kahn(graph))
     
-    c, edges = prims_algorithm(graph, 0)
+    c, edges = prims_algorithm(graph, 1)
     print(c)
     print(edges)
     
