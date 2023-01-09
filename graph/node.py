@@ -27,14 +27,34 @@ class GraphNode(NodeInterface):
         print(f"id: {self.id} neighs: {self.neighbors}")
         
 
-        
-        
-        
-
-class Graph:
-    def __init__(self, graph_nodes, val=None, weighted=False):
-        self.graph_nodes = graph_nodes
+class TreeNode(NodeInterface):
+    def __init__(self, val, children=None):
         self.val = val
-        self.weighted = weighted
+        self.children = children # list of TreeNode objects
+    
+    def get_val(self):
+        return self.val
+    
+    def get_children(self):
+        return self.children
         
+    
+    
+class BinaryTreeNode(NodeInterface):
+    def __init__(self, val, left=None, right=None):
+        self.val = val
+        self.left_child = left
+        self.right_child = right
+    
+    def get_val(self):
+        return self.val
+    
+    def get_left(self):
+        return self.left_child
+    
+    def get_right(self):
+        return self.right_child
+    
+    
+    
     
