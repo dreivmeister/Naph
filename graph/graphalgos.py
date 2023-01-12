@@ -1,4 +1,4 @@
-from utils import load_graph
+from utils import load_graph, plot_graph
 
 def nodes_of_graph_dfs(graph, curr):
     def dfs(curr,nodes_of_graph,visited):
@@ -227,6 +227,7 @@ def tarjans_algorithm(graph):
 
 if __name__=='__main__':
     graph = load_graph('graphconfig.txt')
+    plot_graph(graph)
     #nodes = single_source_shortest_path(graph, graph[2].get_id(), graph[-1].get_id())
     #print(nodes) #[0,2,3,5]
     
@@ -236,5 +237,5 @@ if __name__=='__main__':
     #print(topological_sort_kahn(graph))
     
     
-    print(tarjans_algorithm(graph))
+    #print(tarjans_algorithm(graph))
     

@@ -51,16 +51,72 @@ def runge_kutta_4(a,b,h,f,iv,plot=True):
 
 
 if __name__=='__main__':
-    a = 0
-    b = 5
-    h = 0.5
-    def f(t,y):
-        return np.sin(t)**2*y
+    # a = 0
+    # b = 5
+    # h = 0.5
+    # def f(t,y):
+    #     return np.sin(t)**2*y
     
-    x,y1 = euler_method(a,b,h,f,2.0,plot=False)
-    _,y2 = runge_kutta_4(a,b,h,f,2.0,plot=False)
+    # x,y1 = euler_method(a,b,h,f,2.0,plot=False)
+    # _,y2 = runge_kutta_4(a,b,h,f,2.0,plot=False)
     
-    plt.plot(x,y1,label='euler')
-    plt.plot(x,y2,label='rk4')
-    plt.legend()
+    # plt.plot(x,y1,label='euler')
+    # plt.plot(x,y2,label='rk4')
+    # plt.legend()
+    # plt.show()
+    
+    
+    
+    
+    
+    def f1(y,x,a=10):
+        return a*(y-x)
+    def f2(y,x,z,b=28):
+        return x*(b-z)-y
+    def f3(y,x,z,c=8/3):
+        return x*y-c*z
+    
+    def step(y_n, h, f_val):
+        return y_n + h*f_val
+    
+    # init params
+    a = 10
+    b = 28
+    c = 8/3
+    # init other params
+    t0 = 0
+    t1 = 75
+    h = 0.01
+    # init data structures
+    t = np.linspace(t0,t1,num=int((t1-t0)/h)+1)
+    x = np.zeros(shape=t.shape)
+    y = np.zeros(shape=t.shape)
+    z = np.zeros(shape=t.shape)
+    
+    # init IVP
+    x[0] = 0.
+    y[0] = 1.
+    z[0] = 1.05
+    
+    # step through calculation
+    for i in range(1,len(t)):
+        f1_val = f1(y[i-1],x[i-1])
+        x[i] = step(x[i-1],h,f1_val)
+        
+        f2_val = f2(y[i-1],x[i-1],z[i-1])
+        y[i] = step(y[i-1],h,f2_val)
+        
+        f3_val = f3(y[i-1],x[i-1],z[i-1])
+        z[i] = step(z[i-1],h,f3_val)
+    
+    
+    from mpl_toolkits import mplot3d
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot3D(x,y,z)
     plt.show()
+    
+    
+    
+        
+    

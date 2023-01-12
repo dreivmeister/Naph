@@ -1,5 +1,6 @@
 from node import GraphNode
 from ast import literal_eval
+import graphviz
 
 
 def load_graph(path):
@@ -37,3 +38,15 @@ def load_graph(path):
     
     return sorted(graph_nodes, key=lambda x: x.get_id())
     
+def plot_graph(graph):
+    dot = graphviz.Digraph(comment="Graph")
+    
+    # create nodes
+    for i in range(len(graph)):
+        dot.node(name=str(graph[i].get_id()),label=str(graph[i].get_id()))
+    
+    # create edges
+    for i in range(len(graph)):
+        for j in range(len(graph[i].get_neighbors())):
+            dot.edge(str(graph[i].get_id()),str(graph[i].get_neighbors()[j]))
+    dot.render('graph.gv')
