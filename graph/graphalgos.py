@@ -176,6 +176,54 @@ def prims_algorithm(graph, start):
     return mstCost, mstEdges
 
 
+def tarjans_algorithm(graph):
+    # find SCC
+    UNVISITED = -1
+    n = len(graph)
+    
+    id = 0
+    scc_count = 0
+    
+    ids = [0]*n
+    low = [0]*n
+    on_stack = [False]*n
+    stack = []
+    
+    def dfs(i):
+        nonlocal id
+        nonlocal scc_count
+        stack.append(i)
+        on_stack[i] = True
+        ids[i] = low[i] = id
+        id += 1
+        
+        for to in graph[i].get_neighbors():
+            if ids[to] == UNVISITED:
+                dfs(to)
+            if on_stack[to]:
+                low[i] = min(low[i],low[to])
+        
+        if ids[i] == low[i]:
+            while True:
+                node = stack.pop()
+                on_stack[node] = False
+                low[node] = ids[i]
+                if node == i:
+                    break
+            scc_count += 1
+        
+    
+    def find_sccs():
+        for i in range(n):
+            ids[i] = UNVISITED
+        for i in range(n):
+            if ids[i] == UNVISITED:
+                dfs(i)
+        return low
+    
+    return find_sccs(), ids
+
+
 
 if __name__=='__main__':
     graph = load_graph('graphconfig.txt')
@@ -187,9 +235,6 @@ if __name__=='__main__':
     
     #print(topological_sort_kahn(graph))
     
-    c, edges = prims_algorithm(graph, 1)
-    print(c)
-    print(edges)
     
-    
+    print(tarjans_algorithm(graph))
     

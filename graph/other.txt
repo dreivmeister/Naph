@@ -26,7 +26,16 @@ False #without node vals (False) or with node vals(True)
 2 1
 3 0,1
 
-
+True #weighted (False) or unweighted (True)
+False #without node vals (False) or with node vals(True)
+#id neigh+w
+0 (1,2);(2,3);(3,3) #A
+1 (0,2);(2,4);(4,3) #B
+2 (0,3);(1,4);(3,5);(4,1) #C
+3 (0,3);(2,5);(5,7) #D
+4 (1,3);(2,1);(5,8) #E
+5 (2,6);(3,7);(4,8);(6,9) #F
+6 (5,9) #G
 
 
 True #weighted (False) or unweighted (True)
@@ -45,3 +54,14 @@ True #without node vals (False) or with node vals(True)
 1 7 0  
 2 9 2
 3 2 0,1
+
+
+False
+False
+0 1
+1 6,4,2
+2 3
+3 2,4,5
+4 5
+5 4
+6 0,2
