@@ -16,25 +16,6 @@ def simpson_rule(f, a, b, num):
     
     return (h/6)*I        
 
-
-def f(x):
-    return x**2+4*x+2
-
-a=-1
-b=1
-n = 100
-
-
-# print(np.linspace(a,b,n))
-
-
-# print(f(-1))
-
-# print(simpson_rule(f,a,b,n))
-
-
-
-
 def gauß_quadrature(f, a, b, n):
     if n == 1:
         x = [0]
@@ -54,5 +35,52 @@ def gauß_quadrature(f, a, b, n):
     
     return I
 
-print(gauß_quadrature(f, a, b, n=3))
-        
+
+def romberg_integration(f,a,b,n,k):    
+    def ai0(f, h, a, b):
+        s = 0
+        i = a + h
+        while i <= (b - h):
+            s += f(i)
+            i += h
+        s += (1 / 2) * f(a)
+        s += (1 / 2) * f(b)
+        return h * s
+
+    def aik(h, a, i, k):
+        m = (h[i - k] / h[i])**2
+        a = m * a[i][k - 1] - a[i - 1][k - 1]
+        return a / (m - 1)
+
+
+    h = np.array([2**(-i) for i in range(n)])
+    t = np.zeros((n, k))
+
+    # erste spalte füllen
+    for i in range(t.shape[0]):
+        t[i, 0] = ai0(f, h[i], a, b)
+
+    # rest füllen
+    last_val = (0, 0)
+    for k in range(1, t.shape[1]):
+        for i in range(k, t.shape[0]):
+            t[i, k] = aik(h, t, i, k)
+            if t[i, k] != float(0):
+                last_val = (i, k)
+
+    return t[last_val]
+
+
+
+if __name__=="__main__":
+    def f(x):
+        return x**2+4*x+2
+
+    a=-1
+    b=1
+    # n = 100
+    # print(gauß_quadrature(f, a, b, n=3))
+    
+    print(romberg_integration(f,a,b,5,5))
+    
+    
