@@ -110,37 +110,6 @@ def cholesky_decomposition(A):
 # print(L)
 
 
-def householder(x):
-    alpha = x[0]
-    s = np.power(np.linalg.norm(x[1:]), 2)
-    v = x.copy()
-
-    if s == 0:
-        tau = 0
-    else:
-        t = np.sqrt(alpha**2 + s)
-        v[0] = alpha - t if alpha <= 0 else -s / (alpha + t)
-
-        tau = 2 * v[0]**2 / (s + v[0]**2)
-        v /= v[0]
-
-    return v, tau
-
-def qr_decomposition(A):
-    m,n = A.shape
-    R = A.copy()
-    Q = np.identity(m)
-
-    for j in range(0, n):
-        # Apply Householder transformation.
-        v, tau = householder(R[j:, j])
-        H = np.identity(m)
-        H[j:, j:] -= tau * v @ v.T
-        R = H @ R
-        Q = H @ Q
-
-    return Q[:n].T, R[:n]
-
 
 def householder_vectorized(a):
     """Use this version of householder to reproduce the output of np.linalg.qr 
@@ -155,7 +124,7 @@ def householder_vectorized(a):
     return v,tau
 
 
-def qr_decomposition(A: np.ndarray, snake=False):
+def qr_decomposition(A: np.ndarray):
     m,n = A.shape
     R = A.copy()
     Q = np.identity(m)
@@ -167,7 +136,7 @@ def qr_decomposition(A: np.ndarray, snake=False):
         H[j:, j:] -= tau * (v @ v.T)
         R = H @ R
         Q = H @ Q
-    return Q[:n], np.triu(R[:n])
+    return Q[:n].T, np.triu(R[:n])
 
 def overdetermined_linear_system_solve(A, b):
     Q,R = qr_decomposition(A)
@@ -186,7 +155,28 @@ if __name__=="__main__":
     
     
     
-    A = np.array([[1,-1/4,1/16],[1,1/2,1/4],[1,2,4],[1,5/2,25/4]])
-    b = np.array([0,1,0,1])
+    # A = np.array([[1,-1/4,1/16],[1,1/2,1/4],[1,2,4],[1,5/2,25/4]])
+    # b = np.array([0,1,0,1])
     
-    print(overdetermined_linear_system_solve(A,b))
+    # print(overdetermined_linear_system_solve(A,b))
+    
+    # A = np.array([[3,2,1,0], 
+    #               [-6,-5,2,-3], 
+    #               [15,14,-16,14], 
+    #               [9,8,-10,9]])
+    
+    # b = np.array([5,-5,-3,-2])
+    
+    
+    # p,l,u = LU_partial_decomposition(A)
+    
+    # print(LU_partial_solve(p,l,u,b))
+    
+    A = np.array([[3,7], 
+                  [0,12], 
+                  [4,1]])
+    
+    q,r = qr_decomposition(A)
+    
+    print(q)
+    print(r)

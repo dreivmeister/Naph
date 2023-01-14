@@ -21,6 +21,9 @@ def euler_method(a,b,h,f,iv,plot=True):
         plt.show()
     return t,y
 
+def euler_step(y_n, h, f_val):
+        return y_n + h*f_val
+
 def runge_kutta_4(a,b,h,f,iv,plot=True):
     def step(y_n, k1, k2, k3, k4, h):
         return y_n + (1/6)*(k1+2*k2+2*k3+k4)*h
@@ -45,7 +48,8 @@ def runge_kutta_4(a,b,h,f,iv,plot=True):
         plt.show()
     return t,y
 
-
+def runge_kutta_4_step(y_n,k1,k2,k3,k4,h):
+    return y_n + (1/6)*(k1+2*k2+2*k3+k4)*h
 
 
 
@@ -76,8 +80,7 @@ if __name__=='__main__':
     def f3(y,x,z,c=8/3):
         return x*y-c*z
     
-    def step(y_n, h, f_val):
-        return y_n + h*f_val
+    
     
     # init params
     a = 10
@@ -101,13 +104,13 @@ if __name__=='__main__':
     # step through calculation
     for i in range(1,len(t)):
         f1_val = f1(y[i-1],x[i-1])
-        x[i] = step(x[i-1],h,f1_val)
+        x[i] = euler_step(x[i-1],h,f1_val)
         
         f2_val = f2(y[i-1],x[i-1],z[i-1])
-        y[i] = step(y[i-1],h,f2_val)
+        y[i] = euler_step(y[i-1],h,f2_val)
         
         f3_val = f3(y[i-1],x[i-1],z[i-1])
-        z[i] = step(z[i-1],h,f3_val)
+        z[i] = euler_step(z[i-1],h,f3_val)
     
     
     from mpl_toolkits import mplot3d
