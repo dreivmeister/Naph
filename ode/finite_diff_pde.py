@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
 plate_length = 50
 plate_width = 50
-max_iter_time = 10
+max_iter_time = 100
 
 alpha = 2
 delta_x = 1
@@ -14,10 +15,10 @@ delta_t = (delta_x ** 2)/(4 * alpha)
 gamma = (alpha * delta_t) / (delta_x ** 2)
 
 # Boundary conditions
-boundary_conditions = [0.0,0.0,100.0,0.0] # top,left,bottom,right
+boundary_conditions = [100.0,50.0,100.0,50.0] # top,left,bottom,right
 
 # Initial condition everywhere inside the grid
-initial_condition = 0.0
+initial_condition = 50.0
 
 
 def initialize_u(max_iter_time, boundary_cond, initial_cond, ni=plate_length, nj=plate_width):
@@ -43,22 +44,19 @@ def calculate_u(u):
         C = u[k, 1:-1, 2:  ] #i,j-1
         D = u[k, 1:-1,  :-2] #i,j+1
         E = u[k, 1:-1, 1:-1] #i,j
-        result = gamma * (A+B+C+D-4*E) + E 
+        F = u[k-1,1:-1,1:-1] #k-1,i,j
+        result = gamma * (A+B+C+D-4*E) + 2*E - F 
         # set the newly computed heatmap at time k+1
         u[k+1, 1:-1, 1:-1] = result
     return u
 
 
-# create new map and display result
-u3 = calculate_u(initialize_u(max_iter_time, boundary_conditions, initial_condition, plate_length, plate_width))
 
-
-
-def plotheatmap(u_k, k):
+def plot_u_2d(u_k, k):
     # Clear the current plot figure
     plt.clf()
 
-    plt.title(f"Temperature at t = {k*delta_t:.3f} unit time")
+    plt.title(f"Displacement at t = {k*delta_t:.3f} unit time")
     plt.xlabel("x")
     plt.ylabel("y")
 
@@ -68,12 +66,38 @@ def plotheatmap(u_k, k):
 
     return plt
 
+if __name__=="__main__":
+    plot = '3D'
+    u_init = initialize_u(max_iter_time, boundary_conditions, initial_condition, plate_length, plate_width)
+    u_result = calculate_u(u_init)
+    
+    
+    
+    
+    if plot == '2D':
+        # Do the calculation here
+        def animate(k):
+            plot_u_2d(u_result[k], k)
 
-
-# Do the calculation here
-def animate(k):
-    plotheatmap(u3[k], k)
-
-anim = animation.FuncAnimation(plt.figure(), animate, interval=1, frames=max_iter_time, repeat=False)
-anim.save("heat_equation_solution.gif")
-print("Done!")
+        
+        fig = plt.figure()
+        anim = animation.FuncAnimation(fig, animate, interval=1, frames=max_iter_time, repeat=False)
+        anim.save("pde_2d_solve.gif")
+        print("Done")
+    elif plot == '3D':
+        X = np.arange(0, plate_length, 1)
+        Y = np.arange(0, plate_width, 1)
+        X, Y = np.meshgrid(X, Y)
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111,projection='3d')
+        ax.set_zlim3d(0,200)
+        def animate(n):
+            ax.cla()
+            ax.plot_surface(X,Y,u_result[n,:,:])
+            return fig,
+        
+        anim = animation.FuncAnimation(fig=fig,func=animate,frames=max_iter_time,repeat=False)
+        anim.save("pde_3d_solve.gif")
+        print("Done")
+            
