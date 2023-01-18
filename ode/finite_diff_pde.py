@@ -92,9 +92,9 @@ def calculate_u_1d(u):
     return u
 
 if __name__=="__main__":
-    plot = '1D'
-    u_init = initialize_u_1d(max_iter_time=max_iter_time, length_n=plate_length, boundary_cond=boundary_conditions, initial_cond=initial_condition)
-    u_result = calculate_u_1d(u_init)
+    plot = '2D'
+    u_init = initialize_u_2d(max_iter_time=max_iter_time, boundary_cond=boundary_conditions, initial_cond=initial_condition)
+    u_result = calculate_u_2d(u_init)
     
     
     if plot == '1D':
@@ -120,7 +120,7 @@ if __name__=="__main__":
             plt.xlabel("x")
             plt.ylabel("y")
             # This is to plot u_k (u at time-step k)
-            plt.pcolormesh(u_result[k], cmap=plt.cm.jet, vmin=0, vmax=100)
+            plt.pcolormesh(u_result[k], cmap=plt.cm.jet, vmin=0, vmax=200)
             plt.colorbar()
             return plt
         
@@ -136,8 +136,10 @@ if __name__=="__main__":
         
         def animate(n):
             ax.cla()
+            ax.set_zlim3d(0, 100)
             ax.plot_surface(X,Y,u_result[n,:,:])
             return fig,
         
         anim = animation.FuncAnimation(fig, animate, frames=max_iter_time, repeat=False)
         anim.save("pde_3d_solve.gif")
+    print('SAVED')
