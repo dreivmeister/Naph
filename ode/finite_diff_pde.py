@@ -21,17 +21,28 @@ boundary_conditions = [100.0,50.0,100.0,50.0] # top,left,bottom,right
 initial_condition = 50.0
 
 
-def initialize_u(max_iter_time, boundary_cond, initial_cond, ni=plate_length, nj=plate_width):
+def initialize_u(max_iter_time, 
+                 type_boundary,  
+                 type_initial,
+                 boundary_cond = None,
+                 initial_cond = None, 
+                 ni=plate_length, 
+                 nj=plate_width):
     
-    # Initialize solution: the grid of u(k, i, j)
-    u = np.full((max_iter_time, ni, nj), initial_cond)
+    if type_initial == 'fixed':
+        # Initialize solution: the grid of u(k, i, j)
+        u = np.full((max_iter_time, ni, nj), initial_cond)
+    elif type_initial == 'normal': # normal distribution
+        u = np.random.normal(loc=0.0, scale=1.0, size=(max_iter_time, ni, nj))
 
-    # Set the boundary conditions
-    u[:, 0, :] = boundary_cond[0] #top
-    u[:, :, 0] = boundary_cond[1] #left
-    u[:, -1, :] = boundary_cond[2] #bottom
-    u[:, :, -1] = boundary_cond[3] #right
-
+    if type_boundary == 'dirichlet':
+        assert boundary_cond is not None
+        # Set the boundary conditions
+        u[:, 0, :] = boundary_cond[0] #top
+        u[:, :, 0] = boundary_cond[1] #left
+        u[:, -1, :] = boundary_cond[2] #bottom
+        u[:, :, -1] = boundary_cond[3] #right
+        
     return u
 
 
@@ -45,9 +56,10 @@ def calculate_u(u):
         D = u[k, 1:-1,  :-2] #i,j+1
         E = u[k, 1:-1, 1:-1] #i,j
         F = u[k-1,1:-1,1:-1] #k-1,i,j
-        result = gamma * (A+B+C+D-4*E) + 2*E - F 
+        #result = gamma * (A+B+C+D-4*E) + 2*E - F #2d wave equation
+        result2 = E*(1*(D-E)+1) #inviscid burger equation
         # set the newly computed heatmap at time k+1
-        u[k+1, 1:-1, 1:-1] = result
+        u[k+1, 1:-1, 1:-1] = result2
     return u
 
 
@@ -67,11 +79,9 @@ def plot_u_2d(u_k, k):
     return plt
 
 if __name__=="__main__":
-    plot = '3D'
-    u_init = initialize_u(max_iter_time, boundary_conditions, initial_condition, plate_length, plate_width)
+    plot = '2D'
+    u_init = initialize_u(max_iter_time=max_iter_time, type_boundary='dirichlet', type_initial='normal', boundary_cond=boundary_conditions, ni=plate_length, nj=plate_width)
     u_result = calculate_u(u_init)
-    
-    
     
     
     if plot == '2D':
