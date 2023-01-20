@@ -20,10 +20,10 @@ def extended_horners_method(poly, x):
     # poly = [a_n,a_n-1,...,a_1,a_0]
     # x = x0
     # poly = (x - x0)*b + poly_at_x
-    b = []
-    b.append(poly[0])
+    b = np.zeros(shape=len(poly)-1)
+    b[0] = poly[0]
     for i in range(1, len(poly)-1):
-        b.append(b[i-1]*x+poly[i])
+        b[i] = b[i-1]*x+poly[i]
     poly_at_x = b[-1]*x + poly[-1]
     return poly_at_x, b
 
@@ -42,9 +42,13 @@ def lagrange_interpolation(x, y):
     pass
 
 
-def newton_interpolation(x, y):
-    # computes newton scheme results in interpolation polynomial in newton form
+def newton_interpolation(x, y=None, f=None):
     n = len(x)
+    if f is not None and y is None:
+        y = np.zeros((n,))
+        for i in range(n):
+            y[i] = f(x[i])
+    # computes newton scheme results in interpolation polynomial in newton form
     d = np.zeros((n,n))
     for i in range(n):
         d[i,0] = y[i]
@@ -55,7 +59,11 @@ def newton_interpolation(x, y):
     print(d)
     return d[0,:]
 
-#newton_interpolation([0,1,2,3],[-1,0,5,20])
+
+def func(x):
+    return (x**5 + 2*x**4 - 3*x**2 + x + 1)/(x**2 + 2*x)
+
+print(newton_interpolation([-1,1,2,3,4],f=func))
     
 def evaluate_newton_polynomial(c, x, x0):
     # evaluate polynomial given in newton form    

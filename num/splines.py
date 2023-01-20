@@ -9,7 +9,6 @@ def compute_coeffs(moments, y, h):
         coeffs_j.append((y[j+1]-y[j])/h[j]-(h[j]/6)*(moments[j+1]+2*moments[j])) #bj
         coeffs_j.append(moments[j]/2) #cj
         coeffs_j.append((moments[j+1]-moments[j])/(6*h[j])) #dj
-
         coeffs.append(coeffs_j)
     return coeffs
         
