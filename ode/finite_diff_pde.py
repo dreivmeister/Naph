@@ -6,49 +6,35 @@ from matplotlib.animation import FuncAnimation
 
 
 
-def initialize_u_1d(max_iter_time,
-                    length_n,
-                    boundary_cond = None, 
-                    initial_cond = None):
+def initialize_u(max_iter_time,
+                 dim,
+                 boundary_cond = None, 
+                 initial_cond = None):
     
     if initial_cond[0] == 'fixed':
-        u = np.full((max_iter_time,length_n), initial_cond[1])
+        if len(dim) == 1:
+            u = np.full((max_iter_time,dim[0]), initial_cond[1])
+        elif len(dim) == 2:
+            u = np.full((max_iter_time, dim[0], dim[1]), initial_cond[1])    
     elif initial_cond[0] == 'normal':
-        u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, length_n))
-    
+        if len(dim) == 1:
+            u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, dim[0]))
+        elif len(dim) == 2:
+            u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, dim[0], dim[1]))
     if boundary_cond[0] == 'dirichlet':
         assert boundary_cond is not None
         # Set the boundary conditions
-        u[:, 0] = boundary_cond[1] #left
-        u[:, -1] = boundary_cond[2] #right
+        if len(dim) == 1:
+            u[:, 0] = boundary_cond[1] #left
+            u[:, -1] = boundary_cond[2] #right
+        if len(dim) == 2:
+            u[:, 0, :] = boundary_cond[1] #top
+            u[:, :, 0] = boundary_cond[2] #left
+            u[:, -1, :] = boundary_cond[3] #bottom
+            u[:, :, -1] = boundary_cond[4] #right
     elif boundary_cond[0] == 'neumann':
         raise NotImplementedError('neumann boundary not availaible')
     
-    return u
-
-def initialize_u_2d(max_iter_time,
-                    ni,
-                    nj,
-                    boundary_cond = None,
-                    initial_cond = None 
-                    ):
-    
-    if initial_cond[0] == 'fixed':
-        # Initialize solution: the grid of u(k, i, j)
-        u = np.full((max_iter_time, ni, nj), initial_cond[1])
-    elif initial_cond[0] == 'normal': # normal distribution
-        u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, ni, nj))
-
-    if boundary_cond[0] == 'dirichlet':
-        assert boundary_cond is not None
-        # Set the boundary conditions
-        u[:, 0, :] = boundary_cond[1] #top
-        u[:, :, 0] = boundary_cond[2] #left
-        u[:, -1, :] = boundary_cond[3] #bottom
-        u[:, :, -1] = boundary_cond[4] #right
-    if boundary_cond[0] == 'neumann':
-        raise NotImplementedError('neumann boundary not availaible')
-        
     return u
 
 
@@ -72,7 +58,6 @@ def plot_u_1d(u):
     fig = plt.figure()
     def animate(k):
         plt.clf()
-        plt.title('blalal')
         plt.plot(u[k])
         return plt
     anim = animation.FuncAnimation(fig, animate, frames=max_iter_time, repeat=False)
@@ -104,7 +89,7 @@ def plot_u_3d(u):
     def animate(n):
         ax.cla()
         ax.set_zlim3d(0, 100)
-        ax.plot_surface(X,Y,u_result[n,:,:])
+        ax.plot_surface(X,Y,u[n,:,:])
         return fig,
     
     anim = animation.FuncAnimation(fig, animate, frames=max_iter_time, repeat=False)
@@ -113,7 +98,7 @@ def plot_u_3d(u):
 if __name__=="__main__":
     plate_length = 50
     plate_width = 50
-    max_iter_time = 100
+    max_iter_time = 50
     
     alpha = 2
     delta_x = 1
@@ -126,7 +111,7 @@ if __name__=="__main__":
     initial_condition = ['fixed',50.0]
     plot = '2D'
     
-    u_init = initialize_u_2d(max_iter_time=max_iter_time, boundary_cond=boundary_conditions, initial_cond=initial_condition, ni=plate_length, nj=plate_width)
+    u_init = initialize_u(max_iter_time=max_iter_time, dim=[plate_length,plate_width], boundary_cond=boundary_conditions, initial_cond=initial_condition)
     
     
     # defines the pde
