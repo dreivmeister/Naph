@@ -71,10 +71,11 @@ def pushforward(f, primal, tangent):
     if isinstance(primal, np.ndarray):
         input = DualArray(primal, tangent)
     output = f(input)
-    print(output)
-    primal_out = output.real
-    tangent_out = output.dual
-    return primal_out, tangent_out
+    # this is a hacky solution
+    # but maybe it works
+    if isinstance(output, float):
+        return output,0.0
+    return output.real, output.dual
 
 
 def derivative(f, x):
@@ -82,7 +83,6 @@ def derivative(f, x):
         v = 1.0
     if isinstance(x, np.ndarray):
         v = np.ones_like(x) # creates dual array
-        
     _, df_dx = pushforward(f, x, v)
     return df_dx
 
@@ -99,35 +99,35 @@ def compute_jacobian(f, p):
         for j in range(len(p)):
             # compute partial derivative of comp_func
             # with respect to current dimension
-            
             # get those params right
             a = [*p[:j],*p[j+1:]]
             a.insert(j,None)
             def cf(p):
                 a[j] = p
                 return comp_func(*a)
-            print(a)
-            print(p[j])
             jacobian[i][j] = derivative(cf,p[j])
     return jacobian
-        
-    
+
+def jvp(jac, v):
+    return jac @ v
+def vjp(jac, v):
+    return v @ jac
 
 
 
 if __name__=="__main__":
-    # p = [1.0,2.1,3.5]
-    # def f1(x,y,z):  
-    #     return x*x + 3.0*y + z*z
-    # def f2(x,y,z):
-    #     return 10.0*x + y*z
-    # def f3(x,y,z):
-    #     return z*z + x + y
-    # f = [f3,f2,f1]
+    p = [1.0,2.1,3.5]
+    def f1(x,y,z):  
+        return x*x + 3.0*y + z*z
+    def f2(x,y,z):
+        return 10.0*x + y*z
+    def f3(x,y,z):
+        return x*x + y
+    f = [f1,f2,f3]
+    jac = compute_jacobian(f,p)
+    v = np.array([0,1,0])
     
-    
-    # print(compute_jacobian(f,p))
-    
+    print(vjp(jac,v))
     
     
     # x_p = 2.0
@@ -145,12 +145,10 @@ if __name__=="__main__":
     # print(derivative(f0,x_p))
     
 
-    x_p = 10.0
-    def f(x):
-        return 1.0 - (4.0*x)
-
-
-    print(derivative(f,x_p))
+    # x_p = 10.0
+    # def f(x):
+    #     return 3.0*x**2 + 2.0*x
+    # print(derivative(f,x_p))
 
     # x_v = np.array([[1.0,1.0], 
     #                 [3.0,3.0]])

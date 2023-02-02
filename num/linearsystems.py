@@ -144,6 +144,13 @@ def overdetermined_linear_system_solve(A, b):
     x = np.linalg.solve(R,bs)
     return x
 
+
+
+def svd(A):
+    pass
+
+
+
 if __name__=="__main__":
     # m = 5
     # n = 3
