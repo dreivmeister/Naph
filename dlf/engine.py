@@ -67,7 +67,8 @@ def plus(a, b):
     return res
 
 
-def plus_bcast(a,b):
+def add(a,b):
+    # elementwise vector sum
     # a is the output of dot(x,W) (a vector)
     # b is the bias vector
     
@@ -79,7 +80,7 @@ def plus_bcast(a,b):
         a.grad += dy
         b.grad += dy.sum(axis=0)
         
-    res = Variable(a.data + b.data, is_leaf=False, backw_func=backward_function)
+    res = Variable(np.add(a.data, b.data), is_leaf=False, backw_func=backward_function)
     res.prev.extend([a,b])
     return res
 
@@ -97,7 +98,7 @@ def minus(a,b):
     return res
 
 
-def sumel(a):
+def sum(a):
     if not (isinstance(a,Variable)):
         raise ValueError('all arguments need to be instances of the Variable class\
             at least one of them is not.')
@@ -171,7 +172,7 @@ def matmul(a,b):
     return res
 
 
-def c_mul(a,c):
+def const_multiply(a,c):
     if not (isinstance(a,Variable) or isinstance(c,(int, float))):
         raise ValueError('a needs to be a Variable object, c needs to be one of (int, float)')
     
@@ -220,3 +221,5 @@ def backward_graph(var):
     var.grad = np.ones(var.data.shape)
     for var in reversed(tsorted):
         var.backward()
+        
+        
