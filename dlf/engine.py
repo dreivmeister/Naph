@@ -58,7 +58,7 @@ def plus(a, b):
     # define how the gradient 'flows' through this operation
     def backward_function(dy):
         a.grad += dy
-        b.grad += dy
+        b.grad = b.grad + dy
     
     # create new node in the computational graph as the result of the operation
     res = Variable(a.data + b.data, is_leaf=False, backw_func=backward_function)
@@ -91,9 +91,9 @@ def minus(a,b):
         
     def backward_function(dy):
         b.grad += -dy
-        a.grad += dy
+        a.grad = a.grad + dy
         
-    res = Variable(a.data-b.data, is_leaf=False, backw_func=backward_function)
+    res = Variable(a.data - b.data, is_leaf=False, backw_func=backward_function)
     res.prev.extend([a,b])
     return res
 
@@ -149,7 +149,7 @@ def multiply(a,b):
         if np.isscalar(dy):
             dy = np.ones(1)*dy
         a.grad += np.multiply(dy, b.data)
-        b.grad += np.multiply(dy, a.data)
+        b.grad = b.grad + np.multiply(dy, a.data)
         
     res = Variable(np.multiply(a.data, b.data), is_leaf=False, backw_func=backward_function)
     res.prev.extend([a,b])
@@ -183,7 +183,6 @@ def const_multiply(a,c):
     res.prev.append(a)
     return res
 
-
 def relu(a):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
@@ -195,6 +194,41 @@ def relu(a):
     res.prev.append(a)
     return res
 
+
+def tanh(a):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += (1-np.tanh(a.data)**2)*dy
+        
+    res = Variable(np.tanh(a.data), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
+
+
+def exp(a):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += np.exp(a.data)*dy
+        
+    res = Variable(np.exp(a.data), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
+
+
+def log(a):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += (1./(a.data+1e-10))*dy
+        
+    res = Variable(np.log(a.data), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
 
 # topological sort algorithm to sort the DAG which is the
 # computational graph
