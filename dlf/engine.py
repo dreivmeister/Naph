@@ -57,7 +57,7 @@ def plus(a, b):
     # dy is the upstream gradient in the computational graph
     # define how the gradient 'flows' through this operation
     def backward_function(dy):
-        a.grad += dy
+        a.grad = a.grad + dy
         b.grad = b.grad + dy
     
     # create new node in the computational graph as the result of the operation
@@ -90,7 +90,7 @@ def minus(a,b):
             at least one of them is not.')
         
     def backward_function(dy):
-        b.grad += -dy
+        b.grad = b.grad - dy
         a.grad = a.grad + dy
         
     res = Variable(a.data - b.data, is_leaf=False, backw_func=backward_function)
@@ -98,15 +98,15 @@ def minus(a,b):
     return res
 
 
-def sum(a):
+def sum(a, ax=None):
     if not (isinstance(a,Variable)):
         raise ValueError('all arguments need to be instances of the Variable class\
             at least one of them is not.')
     
     def backward_function(dy=1):
-        a.grad += np.ones(a.data.shape)*dy
+        a.grad += np.ones(a.data.shape)*dy.T
     
-    res = Variable(np.sum(a.data), is_leaf=False, backw_func=backward_function)
+    res = Variable(np.sum(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
     return res
 
@@ -125,6 +125,8 @@ def transpose(a):
     
 
 def dot(a,b):
+    # dot product of two matrices
+    # matrix multiply
     if not (isinstance(a,Variable) or isinstance(b,Variable)):
             raise ValueError('all arguments need to be instances of the Variable class\
             at least one of them is not.')
@@ -141,6 +143,7 @@ def dot(a,b):
 
 
 def multiply(a,b):
+    # elementwise multiplication of two matrices
     if not (isinstance(a,Variable) or isinstance(b,Variable)):
             raise ValueError('all arguments need to be instances of the Variable class\
             at least one of them is not.')
@@ -206,6 +209,16 @@ def tanh(a):
     res.prev.append(a)
     return res
 
+def max(a):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += (np.where(a.data == np.max(a.data), 1., 0.))*dy
+
+    res = Variable(np.max(a.data), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
 
 def exp(a):
     if not (isinstance(a,Variable)):
