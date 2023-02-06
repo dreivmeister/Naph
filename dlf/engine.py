@@ -38,7 +38,7 @@ class Variable():
     
     def _step(self, learning_rate):
         # execute one step of gradient descent
-        self.data -= learning_rate*self.grad
+        self.data = self.data - learning_rate*self.grad
     
     def __repr__(self):
         return f'Variable(id:{self.id},prev:{list(map(lambda a:a.id,self.prev))},is_leaf:{self.is_leaf})\n'
@@ -82,6 +82,10 @@ class Variable():
         res = Variable(self.data * other.data, is_leaf=False, backw_func=backward_function)
         res.prev.extend([self,other])
         return res
+    
+    def __neg__(self):
+        return Variable(-1) * self
+
 
 # define some primitive operations to link different Variable objects
 # and to differentiate through these operations
@@ -91,7 +95,7 @@ def sum(a, ax=None):
             at least one of them is not.')
     
     def backward_function(dy=1):
-        a.grad += np.ones(a.data.shape)*dy.T
+        a.grad = a.grad + np.ones(a.data.shape)*dy.T
     
     res = Variable(np.sum(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)

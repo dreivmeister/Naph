@@ -75,16 +75,24 @@ def cross_entropy(out, targets, eps=1e-12):
     ce = Variable(-(1/N)) * ce
     return ce
     
-
-
+    
 def softmax(out):
     out_exp = engine.exp(out - engine.max(out))
     exp_sum = engine.sum(out_exp, ax=1)
     exp_sum.data = 1./exp_sum.data
     return engine.transpose(engine.transpose(out_exp) * exp_sum)
 
-
+def hinge_loss(logits, targets):
+    n = logits.data.shape[0]
+    return Variable(1.0/n) * engine.sum(engine.relu(Variable(1) - targets * logits))
                 
+                
+#TODO:
+#-regularization techniques (l1,l2,dropout,batchnorm)
+#-different optimiziers
+#-plotting            
+            
+
 if __name__=='__main__':
     
     #quick random example
@@ -102,63 +110,68 @@ if __name__=='__main__':
             return softmax(n3)
         
         def parameters(self):
-            return [*self.fc1.parameters(),*self.fc2.parameters(),*self.fc3.parameters()]
+            return [*self.fc1.parameters()]
+    
+    
+    m = Net()
+    l = [i.data*i.data for i in m.parameters()]
+    print(sum(sum(l[0])))
     
     
     
     
-    # # ALWAYS NEED THE BATCH DIMENSION!!
-    # a = Variable(np.expand_dims(np.array([1.,2.,3.]), axis=0))
+    # # # ALWAYS NEED THE BATCH DIMENSION!!
+    # # a = Variable(np.expand_dims(np.array([1.,2.,3.]), axis=0))
+    # # print(a.data.shape)
+    # # l1 = LinearLayer(3,10)
+    # # y = l1.forward(a)
+    # # l1.zero_grad()
+    # # engine.backward_graph(y)
+    
+    
+    # # data generation
+    # def f(x,y):
+    #     return 3*x + 2*y
+    # def g(x,y):
+    #     return x
+    # def h(x,y):
+    #     return 6*x - y
+    
+    # eps = 1e-10
+    # inp = []
+    # target = []
+    # for x in range(10):
+    #     for y in range(10):
+    #         inp.append([x,y])
+    #         if x > 4:
+    #             target.append([1.,0.,0.])
+    #         elif x < 3 and y > 6:
+    #             target.append([0.,1.,0.])
+    #         else:
+    #             target.append([0.,0.,1.])
+    
+    # a = Variable(np.array(inp))
+    # target = Variable(np.array(target))
     # print(a.data.shape)
-    # l1 = LinearLayer(3,10)
-    # y = l1.forward(a)
-    # l1.zero_grad()
-    # engine.backward_graph(y)
-    
-    
-    # data generation
-    def f(x,y):
-        return 3*x + 2*y
-    def g(x,y):
-        return x
-    def h(x,y):
-        return 6*x - y
-    
-    eps = 1e-10
-    inp = []
-    target = []
-    for x in range(10):
-        for y in range(10):
-            inp.append([x,y])
-            if x > 4:
-                target.append([1.,0.,0.])
-            elif x < 3 and y > 6:
-                target.append([0.,1.,0.])
-            else:
-                target.append([0.,0.,1.])
-    
-    a = Variable(np.array(inp))
-    target = Variable(np.array(target))
-    print(a.data.shape)
-    print(target.data.shape)
+    # print(target.data.shape)
     
     
     
     
     
-    model = Net()
-    # training
-    for i in range(100):
-        out = model.forward(a)
-        loss = cross_entropy(out,target)
-        model.zero_grad()
-        engine.backward_graph(loss)
+    # model = Net()
+    # # training
+    # for i in range(100):
+    #     out = model.forward(a)
+    #     loss = cross_entropy(out,target)
+    #     model.zero_grad()
+    #     engine.backward_graph(loss)
         
-        if i % 10 == 0:
-            #print(out.data)
-            print(f"loss: {loss.data[0]}")
+    #     if i % 10 == 0:
+    #         #print(out.data)
+    #         print(f"loss: {loss.data[0]}")
             
-        model.step(3e-4)
+    #     model.step(3e-4)
         
         
     # # testing
