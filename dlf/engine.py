@@ -43,61 +43,48 @@ class Variable():
     def __repr__(self):
         return f'Variable(id:{self.id},prev:{list(map(lambda a:a.id,self.prev))},is_leaf:{self.is_leaf})\n'
     
+    def __add__(self, other):
+        if not (isinstance(other,Variable)):
+            raise ValueError('other needs to be a Variable')
+        
+        def backward_function(dy):
+            self.grad = self.grad + dy
+            other.grad = other.grad + dy
+            #other.grad = other.grad + dy.sum(axis=0)
+        
+        res = Variable(self.data + other.data, is_leaf=False, backw_func=backward_function)
+        res.prev.extend([self,other])
+        return res
+    
+    def __sub__(self, other):
+        if not (isinstance(other,Variable)):
+            raise ValueError('other needs to be a Variable')
+    
+        def backward_function(dy):
+            other.grad = other.grad - dy
+            self.grad = self.grad + dy
+            
+        res = Variable(self.data - other.data, is_leaf=False, backw_func=backward_function)
+        res.prev.extend([self,other])
+        return res
+    
+    def __mul__(self, other):
+        # elementwise multiply
+        if not (isinstance(other,Variable)):
+            raise ValueError('other needs to be a Variable')
+    
+        def backward_function(dy):
+            if np.isscalar(dy):
+                dy = np.ones(1)*dy
+            self.grad = self.grad + np.multiply(dy, other.data)
+            other.grad = other.grad + np.multiply(dy, self.data)
+            
+        res = Variable(self.data * other.data, is_leaf=False, backw_func=backward_function)
+        res.prev.extend([self,other])
+        return res
 
 # define some primitive operations to link different Variable objects
 # and to differentiate through these operations
-
-# this primitive is commented more extensive than the others for demonstrational purposes
-def plus(a, b):
-    # error handling
-    if not (isinstance(a,Variable) or isinstance(b,Variable)):
-        raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-    
-    # dy is the upstream gradient in the computational graph
-    # define how the gradient 'flows' through this operation
-    def backward_function(dy):
-        a.grad = a.grad + dy
-        b.grad = b.grad + dy
-    
-    # create new node in the computational graph as the result of the operation
-    res = Variable(a.data + b.data, is_leaf=False, backw_func=backward_function)
-    # add children information
-    res.prev.extend([a,b])
-    return res
-
-
-def add(a,b):
-    # elementwise vector sum
-    # a is the output of dot(x,W) (a vector)
-    # b is the bias vector
-    
-    if not (isinstance(a,Variable) or isinstance(b,Variable)):
-        raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-    
-    def backward_function(dy):
-        a.grad += dy
-        b.grad += dy.sum(axis=0)
-        
-    res = Variable(np.add(a.data, b.data), is_leaf=False, backw_func=backward_function)
-    res.prev.extend([a,b])
-    return res
-
-def minus(a,b):
-    if not (isinstance(a,Variable) and isinstance(b,Variable)):
-        raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-        
-    def backward_function(dy):
-        b.grad = b.grad - dy
-        a.grad = a.grad + dy
-        
-    res = Variable(a.data - b.data, is_leaf=False, backw_func=backward_function)
-    res.prev.extend([a,b])
-    return res
-
-
 def sum(a, ax=None):
     if not (isinstance(a,Variable)):
         raise ValueError('all arguments need to be instances of the Variable class\
@@ -142,50 +129,6 @@ def dot(a,b):
     return res
 
 
-def multiply(a,b):
-    # elementwise multiplication of two matrices
-    if not (isinstance(a,Variable) or isinstance(b,Variable)):
-            raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-    
-    def backward_function(dy):
-        if np.isscalar(dy):
-            dy = np.ones(1)*dy
-        a.grad += np.multiply(dy, b.data)
-        b.grad = b.grad + np.multiply(dy, a.data)
-        
-    res = Variable(np.multiply(a.data, b.data), is_leaf=False, backw_func=backward_function)
-    res.prev.extend([a,b])
-    return res
-
-
-def matmul(a,b):
-    if not (isinstance(a,Variable) and isinstance(b,Variable)):
-            raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-            
-    def backward_function(dy):
-        if a.requires_grad:
-            a.grad = plus(a.grad,matmul(dy,transpose(b)))
-        if b.requires_grad:
-            b.grad = plus(b.grad,matmul(transpose(a),dy))
-            
-    res = Variable(np.matmul(a.data,b.data),is_leaf=False,backward_fun=backward_function)
-    res.prev.extend([a,b])
-    return res
-
-
-def const_multiply(a,c):
-    if not (isinstance(a,Variable) or isinstance(c,(int, float))):
-        raise ValueError('a needs to be a Variable object, c needs to be one of (int, float)')
-    
-    def backward_function(dy=1):
-        a.grad += dy*c
-        
-    res = Variable(c * a.data, is_leaf=False, backw_func=backward_function)
-    res.prev.append(a)
-    return res
-
 def relu(a):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
@@ -209,6 +152,19 @@ def tanh(a):
     res.prev.append(a)
     return res
 
+
+def sigmoid(a):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad = a.grad + (np.exp(-a.data)/(1+np.exp(-a.data)**2))*dy
+    
+    res = Variable(1/(1 + np.exp(-a.data)), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
+
+
 def max(a):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
@@ -219,6 +175,7 @@ def max(a):
     res = Variable(np.max(a.data), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
     return res
+
 
 def exp(a):
     if not (isinstance(a,Variable)):
@@ -237,7 +194,7 @@ def log(a):
         raise ValueError('a needs to be a Variable object')
     
     def backward_function(dy):
-        a.grad += (1./(a.data+1e-10))*dy
+        a.grad = a.grad + (1./(a.data+1e-10))*dy
         
     res = Variable(np.log(a.data), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)

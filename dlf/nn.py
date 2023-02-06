@@ -31,7 +31,7 @@ class LinearLayer(Module):
             self.b = Variable(np.random.uniform(-std, std, features_out))
 
     def forward(self, x):
-        return engine.add(engine.dot(x, self.w), self.b)
+        return engine.dot(x, self.w) + self.b
     
     def parameters(self):
         return [self.w, self.b]
@@ -46,43 +46,43 @@ def mean_squared_error(out, target):
     # shapes have to match
     
     # get the batch dimension
-    n = out.data.shape[1]
-    r = engine.minus(out,target)
-    return engine.const_multiply(engine.sum(engine.multiply(r,r)),1.0/n)
-
-
-# binary classification loss
-def binary_crossentropy(out, target):
-    """
-    out has the probs of being label 0
-    out =    [0.2,0.4,0.9]
-    target = [1,0,0]
-    """
-    # for numerical stability
-    out.data += 1e-10
-    n = out.data.shape[0]
-    res = engine.plus(engine.multiply(target,engine.log(out)), 
-                      engine.multiply(engine.minus(Variable(np.array([1])),target), engine.log(engine.minus(Variable(np.array([1])),out))))
-    return engine.const_multiply(res, -(1./n))
+    n = out.data.shape[1]*out.data.shape[0]
+    r = out - target
+    return Variable(1/n) * engine.sum(r*r)
     
-
 # multi class classification
 def cross_entropy(out, targets, eps=1e-12):
+    """
+    expected:
+    predictions = np.array([[0.25,0.25,0.25,0.25],
+                            [0.01,0.01,0.01,0.96]])
+    targets = np.array([[0,0,0,1],
+                        [0,0,0,1]]) (2,4)
+    # 2 - num samples
+    # 4 - num classes
+    # with one hot vectors
+    for binary classification:
+    - softmax on two neuron output
+    predictions = np.array([[0.5,0.5],
+                            [0,04,0.96]])
+    targets = np.array([[1,0],
+                        [0,1]]) (2,2)
+                        
+    """
     out.data = np.clip(out.data, eps, 1. - eps)
     N = out.data.shape[0]
-    ce = engine.sum(engine.multiply(targets, engine.log(out)))
-    ce = engine.const_multiply(ce, -(1./N))
+    ce = engine.sum(targets * engine.log(out))
+    ce = Variable(-(1/N)) * ce
     return ce
     
 
 
 def softmax(out):
-    out_exp = engine.exp(engine.minus(out, engine.max(out)))
+    out_exp = engine.exp(out - engine.max(out))
     exp_sum = engine.sum(out_exp, ax=1)
     exp_sum.data = 1./exp_sum.data
-    
-    return engine.transpose(engine.multiply(engine.transpose(out_exp), exp_sum))
-    
+    return engine.transpose(engine.transpose(out_exp) * exp_sum)
+
 
                 
 if __name__=='__main__':
