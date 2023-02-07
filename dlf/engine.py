@@ -87,6 +87,19 @@ class Variable():
         return Variable(-1) * self
 
 
+def div(a, b):
+    if not (isinstance(a,Variable) or isinstance(b,Variable)):
+            raise ValueError('all arguments need to be instances of the Variable class\
+            at least one of them is not.')
+    
+    def backward_function(dy):
+        a.grad = a.grad + (1./b.data)*dy
+        b.grad = b.grad + a.data*dy
+    
+    res = Variable(a.data / b.data, is_leaf=False, backw_func=backward_function)
+    res.prev.extend([a,b])
+    return res
+
 # define some primitive operations to link different Variable objects
 # and to differentiate through these operations
 def sum(a, ax=None):
@@ -108,7 +121,7 @@ def transpose(a):
             at least one of them is not.')
     
     def backward_function(dy=1):
-        a.grad += dy.T
+        a.grad = a.grad + dy.T
 
     res = Variable(a.data.T, is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
@@ -198,7 +211,7 @@ def log(a):
         raise ValueError('a needs to be a Variable object')
     
     def backward_function(dy):
-        a.grad = a.grad + (1./(a.data+1e-10))*dy
+        a.grad = a.grad + (1./(a.data+1e-12))*dy
         
     res = Variable(np.log(a.data), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)

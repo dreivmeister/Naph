@@ -11,7 +11,8 @@ class Module:
             
     def step(self, lr):
         for p in self.parameters():
-            p._step(lr)
+            if p != []:
+                p._step(lr)
 
     def parameters(self):
         return []
@@ -36,6 +37,26 @@ class LinearLayer(Module):
     def parameters(self):
         return [self.w, self.b]
 
+
+class BatchNorm1D(Module):
+    def __init__(self, num_features) -> None:
+        super(BatchNorm1D, self).__init__()
+        pass
+
+
+class Dropout(Module):
+    def __init__(self, p_drop=0.5):
+        super(Dropout, self).__init__()
+        self.p_keep = 1-p_drop
+        
+    def forward(self, x):
+        binary_value = Variable(np.random.rand(x.data.shape[0], x.data.shape[1]) < self.p_keep)
+        res = x * binary_value
+        res = engine.div(res,Variable(self.p_keep)) # inverted dropout
+        return res
+    
+    def parameters(self):
+        return super().parameters()
 
 
 # misc functions and classes like:
@@ -69,9 +90,9 @@ def cross_entropy(out, targets, eps=1e-12):
                         [0,1]]) (2,2)
                         
     """
-    out.data = np.clip(out.data, eps, 1. - eps)
+    #out.data = np.clip(out.data, eps, 1. - eps)
     N = out.data.shape[0]
-    ce = engine.sum(targets * engine.log(out))
+    ce = engine.sum(targets * engine.log(out+Variable(eps)))
     ce = Variable(-(1/N)) * ce
     return ce
     
@@ -79,7 +100,7 @@ def cross_entropy(out, targets, eps=1e-12):
 def softmax(out):
     out_exp = engine.exp(out - engine.max(out))
     exp_sum = engine.sum(out_exp, ax=1)
-    exp_sum.data = 1./exp_sum.data
+    exp_sum = engine.div(Variable(1.),exp_sum)
     return engine.transpose(engine.transpose(out_exp) * exp_sum)
 
 def hinge_loss(logits, targets):
@@ -91,7 +112,16 @@ def hinge_loss(logits, targets):
 #-regularization techniques (l1,l2,dropout,batchnorm)
 #-different optimiziers
 #-plotting            
-            
+
+def l2(model):
+    s = Variable(0)
+    for p in model.parameters():
+        s = s + engine.sum(p*p)
+    return s
+
+
+
+
 
 if __name__=='__main__':
     

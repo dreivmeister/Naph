@@ -9,7 +9,7 @@ import nn
 from sklearn.datasets import make_moons
 
 # load data
-X, y = make_moons(n_samples=500, noise=0.1)
+X, y = make_moons(n_samples=100, noise=0.1)
 y = y*2 -1
 # plt.figure(figsize=(5,5))
 # plt.scatter(X[:,0],X[:,1],c=y,s=20,cmap='jet')
@@ -22,11 +22,15 @@ class Classifier(nn.Module):
             self.fc1 = nn.LinearLayer(2,16)
             self.fc2 = nn.LinearLayer(16,16)
             self.fc3 = nn.LinearLayer(16,1)
+            self.d1 = nn.Dropout()
+            self.d2 = nn.Dropout()
 
         def forward(self, inp):
             n1 = engine.relu(self.fc1.forward(inp))
-            n2 = engine.relu(self.fc2.forward(n1))
-            n3 = self.fc3.forward(n2)
+            n12 = self.d1.forward(n1)
+            n2 = engine.relu(self.fc2.forward(n12))
+            n21 = self.d2.forward(n2)
+            n3 = self.fc3.forward(n21)
             return n3
         
         def parameters(self):
@@ -37,7 +41,7 @@ class Classifier(nn.Module):
 model = Classifier()
 batch_size = None
 # training
-for i in range(170):
+for i in range(100):
     # data load
     if batch_size is None:
         Xb, yb = X, y
@@ -53,11 +57,10 @@ for i in range(170):
     yb = Variable(np.expand_dims(yb, axis=1))
     data_loss = nn.hinge_loss(scores, yb)
     
+    alpha = Variable(1e-4)
+    reg_loss = nn.l2(model)
     
-    
-    total_loss = data_loss
-    
-    accuracy = [(yi > 0) == (scorei > 0) for yi, scorei in zip(yb.data, scores.data)]
+    total_loss = data_loss + reg_loss
     
     model.zero_grad()
     engine.backward_graph(total_loss)
@@ -67,7 +70,6 @@ for i in range(170):
     
     if i % 10 == 0:
         print(f"loss: {total_loss.data[0]}")
-        #print(f"acc: {sum(accuracy)/len(accuracy)*100}")
     
 
 

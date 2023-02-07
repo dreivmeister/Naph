@@ -60,6 +60,10 @@ def linear_layer_multi_cross_entropy_test():
     loss = torch.nn.functional.cross_entropy(y,t)
     loss.backward()
     xpt, ypt = x, loss
+    
+    
+    
+    
 
 
     x1 = Variable(np.array([[-4.0,2.0],
