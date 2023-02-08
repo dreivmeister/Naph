@@ -51,7 +51,7 @@ class BatchNorm1D(Module):
         # mean
         m = engine.mean(x, ax=0)
         # variance
-        v = engine.variance(x, m, ax=0)
+        v = engine.variance(x, ax=0)
         # normalize
         x = (x - m)/(v**(1/2))
         # scale and shift

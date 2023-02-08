@@ -46,11 +46,7 @@ class Variable():
     def __add__(self, other):
         if not (isinstance(other,Variable)):
             raise ValueError('other needs to be a Variable')
-        
-        def backward_function(dy):
-            self.grad = self.grad + dy
-            other.grad = other.grad + dy
-            #other.grad = other.grad + dy.sum(axis=0)
+
             
         def backward_function2(grad):
             # Sum out added dims
@@ -125,7 +121,7 @@ class Variable():
     
         def backward_function(dy):
             self.grad = self.grad + (1./other.data)*dy
-            other.grad = other.grad + self.data*dy
+            other.grad = other.grad + (-self.data/other.data**2)*dy
         
         res = Variable(self.data / other.data, is_leaf=False, backw_func=backward_function)
         res.prev.extend([self,other])
@@ -133,20 +129,6 @@ class Variable():
     
     def __neg__(self):
         return Variable(-1) * self
-
-
-def div(a, b):
-    if not (isinstance(a,Variable) or isinstance(b,Variable)):
-            raise ValueError('all arguments need to be instances of the Variable class\
-            at least one of them is not.')
-    
-    def backward_function(dy):
-        a.grad = a.grad + (1./b.data)*dy
-        b.grad = b.grad + a.data*dy
-    
-    res = Variable(a.data / b.data, is_leaf=False, backw_func=backward_function)
-    res.prev.extend([a,b])
-    return res
 
 # define some primitive operations to link different Variable objects
 # and to differentiate through these operations
@@ -156,7 +138,15 @@ def sum(a, ax=None):
             at least one of them is not.')
     
     def backward_function(dy=1):
-        a.grad = a.grad + np.ones(a.data.shape)*dy.T
+        if a.data.shape[0] == a.data.shape[1]:
+            a.grad = a.grad + np.ones(a.data.shape)*dy.T
+        else:
+            if ax == 0:
+                a.grad = a.grad + np.ones(a.data.T.shape)*dy
+            elif ax == 1:
+                a.grad = a.grad + np.ones(a.data.shape)*dy.T
+            else:
+                a.grad = a.grad + np.ones(a.data.shape)*dy.T
     
     res = Variable(np.sum(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
@@ -247,18 +237,19 @@ def mean(a, ax=None):
         raise ValueError('a needs to be a Variable object')
     
     def backward_function(dy):
-        a.grad += (1./a.data.shape[0])*dy
+        a.grad += (1./(a.data.shape[0]*a.data.shape[1]))*dy
 
     res = Variable(np.mean(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
     return res
 
-def variance(a, m, ax=None):
+def variance(a, ax=None):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
     
     def backward_function(dy):
-        a.grad += ((-2.*m.data)/a.data.shape[0])*dy
+        m = mean(a)
+        a.grad += ((-2.*m.data)/(a.data.shape[0]*a.data.shape[1]))*dy
     
     res = Variable(np.var(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)

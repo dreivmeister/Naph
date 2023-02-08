@@ -38,7 +38,7 @@ class Classifier(nn.Module):
 model = Classifier()
 batch_size = None
 # training
-for i in range(100):
+for i in range(120):
     # data load
     if batch_size is None:
         Xb, yb = X, y
