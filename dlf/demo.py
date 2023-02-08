@@ -2,6 +2,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
+import torch
+
 import engine
 from engine import Variable
 import nn
@@ -20,21 +22,16 @@ class Classifier(nn.Module):
         def __init__(self):
             super(Classifier, self).__init__()
             self.fc1 = nn.LinearLayer(2,16)
-            self.fc2 = nn.LinearLayer(16,16)
-            self.fc3 = nn.LinearLayer(16,1)
-            self.d1 = nn.Dropout()
-            self.d2 = nn.Dropout()
-
+            self.fc2 = nn.LinearLayer(16,1)
+            
+        
         def forward(self, inp):
             n1 = engine.relu(self.fc1.forward(inp))
-            n12 = self.d1.forward(n1)
-            n2 = engine.relu(self.fc2.forward(n12))
-            n21 = self.d2.forward(n2)
-            n3 = self.fc3.forward(n21)
-            return n3
+            n2 = self.fc2.forward(n1)
+            return n2
         
         def parameters(self):
-            return [*self.fc1.parameters(),*self.fc2.parameters(),*self.fc3.parameters()]
+            return [*self.fc1.parameters(),*self.fc2.parameters()]
 
 
 
@@ -57,10 +54,11 @@ for i in range(100):
     yb = Variable(np.expand_dims(yb, axis=1))
     data_loss = nn.hinge_loss(scores, yb)
     
-    alpha = Variable(1e-4)
-    reg_loss = nn.l2(model)
+    # #l2 reg.
+    # alpha = Variable(1e-4)
+    # reg_loss = nn.l2(model)
     
-    total_loss = data_loss + reg_loss
+    total_loss = data_loss
     
     model.zero_grad()
     engine.backward_graph(total_loss)

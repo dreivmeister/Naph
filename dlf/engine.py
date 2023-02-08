@@ -34,7 +34,7 @@ class Variable():
         self.backw_func(self.grad)
     
     def _zero_grad(self):
-        self.grad = np.zeros(self.data.shape)
+        self.grad = np.zeros(self.data.shape,dtype=np.float64)
     
     def _step(self, learning_rate):
         # execute one step of gradient descent
@@ -51,10 +51,35 @@ class Variable():
             self.grad = self.grad + dy
             other.grad = other.grad + dy
             #other.grad = other.grad + dy.sum(axis=0)
+            
+        def backward_function2(grad):
+            # Sum out added dims
+            ndims_added = grad.ndim - self.data.ndim
+            for _ in range(ndims_added):
+                grad = grad.sum(axis=0)
+
+            # Sum across broadcasted (but non-added dims)
+            for i, dim in enumerate(self.data.shape):
+                if dim == 1:
+                    grad = grad.sum(axis=i, keepdims=True)
+            
+            self.grad = self.grad + grad
+            
+            ndims_added = grad.ndim - other.data.ndim
+            for _ in range(ndims_added):
+                grad = grad.sum(axis=0)
+
+            # Sum across broadcasted (but non-added dims)
+            for i, dim in enumerate(other.data.shape):
+                if dim == 1:
+                    grad = grad.sum(axis=i, keepdims=True)
+            
+            other.grad = other.grad + grad
         
-        res = Variable(self.data + other.data, is_leaf=False, backw_func=backward_function)
+        res = Variable(self.data + other.data, is_leaf=False, backw_func=backward_function2)
         res.prev.extend([self,other])
         return res
+                
     
     def __sub__(self, other):
         if not (isinstance(other,Variable)):
@@ -80,6 +105,29 @@ class Variable():
             other.grad = other.grad + np.multiply(dy, self.data)
             
         res = Variable(self.data * other.data, is_leaf=False, backw_func=backward_function)
+        res.prev.extend([self,other])
+        return res
+    
+    def __pow__(self, power):
+        if not (isinstance(power,int) or isinstance(power,float)):
+            raise ValueError('power needs to be int or float')
+        
+        def backward_function(dy):
+            self.grad = self.grad + (power*self.data**(power-1))*dy
+            
+        res = Variable(self.data**power, is_leaf=False, backw_func=backward_function)
+        res.prev.append(self)
+        return res
+    
+    def __truediv__ (self, other):
+        if not (isinstance(other,Variable)):
+            raise ValueError('other needs to be a Variable')
+    
+        def backward_function(dy):
+            self.grad = self.grad + (1./other.data)*dy
+            other.grad = other.grad + self.data*dy
+        
+        res = Variable(self.data / other.data, is_leaf=False, backw_func=backward_function)
         res.prev.extend([self,other])
         return res
     
@@ -138,8 +186,8 @@ def dot(a,b):
     def backward_function(dy):
         if np.isscalar(dy):
             dy = np.ones(1)*dy
-        a.grad += np.dot(dy, b.data.T)
-        b.grad += np.dot(a.data.T, dy)
+        a.grad = a.grad + np.dot(dy, b.data.T)
+        b.grad = b.grad + np.dot(a.data.T, dy)
     
     res = Variable(np.dot(a.data, b.data), is_leaf=False, backw_func=backward_function)
     res.prev.extend([a,b])
@@ -194,6 +242,31 @@ def max(a):
     return res
 
 
+def mean(a, ax=None):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += (1./a.data.shape[0])*dy
+
+    res = Variable(np.mean(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
+
+def variance(a, m, ax=None):
+    if not (isinstance(a,Variable)):
+        raise ValueError('a needs to be a Variable object')
+    
+    def backward_function(dy):
+        a.grad += ((-2.*m.data)/a.data.shape[0])*dy
+    
+    res = Variable(np.var(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
+    res.prev.append(a)
+    return res
+        
+    
+
+
 def exp(a):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
@@ -239,7 +312,7 @@ def backward_graph(var):
         raise ValueError('var needs to be a Variable instance')
     tsorted = top_sort(var)
     
-    var.grad = np.ones(var.data.shape)
+    var.grad = np.ones(var.data.shape,dtype=np.float64)
     for var in reversed(tsorted):
         var.backward()
         

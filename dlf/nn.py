@@ -17,6 +17,7 @@ class Module:
     def parameters(self):
         return []
 
+
 class LinearLayer(Module):
     def __init__(self, features_in, features_out, w=None, b=None):
         super(LinearLayer, self).__init__()
@@ -38,10 +39,26 @@ class LinearLayer(Module):
         return [self.w, self.b]
 
 
+
+
 class BatchNorm1D(Module):
     def __init__(self, num_features) -> None:
         super(BatchNorm1D, self).__init__()
-        pass
+        self.gamma = Variable(np.ones(num_features))
+        self.beta = Variable(np.zeros(num_features))
+        
+    def forward(self, x):
+        # mean
+        m = engine.mean(x, ax=0)
+        # variance
+        v = engine.variance(x, m, ax=0)
+        # normalize
+        x = (x - m)/(v**(1/2))
+        # scale and shift
+        return self.gamma*x + self.beta
+    
+    def parameters(self):
+        return [self.gamma, self.beta]
 
 
 class Dropout(Module):
@@ -59,9 +76,11 @@ class Dropout(Module):
         return super().parameters()
 
 
+
+
+
 # misc functions and classes like:
 # losses, optimizers, convencience utilities and so on
-
 # regression loss
 def mean_squared_error(out, target):
     # shapes have to match
@@ -100,18 +119,13 @@ def cross_entropy(out, targets, eps=1e-12):
 def softmax(out):
     out_exp = engine.exp(out - engine.max(out))
     exp_sum = engine.sum(out_exp, ax=1)
-    exp_sum = engine.div(Variable(1.),exp_sum)
+    exp_sum = Variable(1.) / exp_sum
     return engine.transpose(engine.transpose(out_exp) * exp_sum)
 
 def hinge_loss(logits, targets):
     n = logits.data.shape[0]
     return Variable(1.0/n) * engine.sum(engine.relu(Variable(1) - targets * logits))
-                
-                
-#TODO:
-#-regularization techniques (l1,l2,dropout,batchnorm)
-#-different optimiziers
-#-plotting            
+                  
 
 def l2(model):
     s = Variable(0)
@@ -122,87 +136,7 @@ def l2(model):
 
 
 
-
-if __name__=='__main__':
-    
-    #quick random example
-    class Net(Module):
-        def __init__(self):
-            super(Net, self).__init__()
-            self.fc1 = LinearLayer(2,32)
-            self.fc2 = LinearLayer(32,100)
-            self.fc3 = LinearLayer(100,3)
-
-        def forward(self, inp):
-            n1 = engine.relu(self.fc1.forward(inp))
-            n2 = engine.relu(self.fc2.forward(n1))
-            n3 = engine.relu(self.fc3.forward(n2))
-            return softmax(n3)
-        
-        def parameters(self):
-            return [*self.fc1.parameters()]
-    
-    
-    m = Net()
-    l = [i.data*i.data for i in m.parameters()]
-    print(sum(sum(l[0])))
-    
-    
-    
-    
-    # # # ALWAYS NEED THE BATCH DIMENSION!!
-    # # a = Variable(np.expand_dims(np.array([1.,2.,3.]), axis=0))
-    # # print(a.data.shape)
-    # # l1 = LinearLayer(3,10)
-    # # y = l1.forward(a)
-    # # l1.zero_grad()
-    # # engine.backward_graph(y)
-    
-    
-    # # data generation
-    # def f(x,y):
-    #     return 3*x + 2*y
-    # def g(x,y):
-    #     return x
-    # def h(x,y):
-    #     return 6*x - y
-    
-    # eps = 1e-10
-    # inp = []
-    # target = []
-    # for x in range(10):
-    #     for y in range(10):
-    #         inp.append([x,y])
-    #         if x > 4:
-    #             target.append([1.,0.,0.])
-    #         elif x < 3 and y > 6:
-    #             target.append([0.,1.,0.])
-    #         else:
-    #             target.append([0.,0.,1.])
-    
-    # a = Variable(np.array(inp))
-    # target = Variable(np.array(target))
-    # print(a.data.shape)
-    # print(target.data.shape)
-    
-    
-    
-    
-    
-    # model = Net()
-    # # training
-    # for i in range(100):
-    #     out = model.forward(a)
-    #     loss = cross_entropy(out,target)
-    #     model.zero_grad()
-    #     engine.backward_graph(loss)
-        
-    #     if i % 10 == 0:
-    #         #print(out.data)
-    #         print(f"loss: {loss.data[0]}")
-            
-    #     model.step(3e-4)
-        
-        
-    # # testing
-    # print(model.forward(Variable(np.array((2,7)))).data)
+#TODO:
+#-regularization techniques (l1,l2,dropout,batchnorm)
+#-different optimiziers
+#-plotting          

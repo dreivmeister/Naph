@@ -61,9 +61,6 @@ def linear_layer_multi_cross_entropy_test():
     loss.backward()
     xpt, ypt = x, loss
     
-    
-    
-    
 
 
     x1 = Variable(np.array([[-4.0,2.0],
@@ -139,6 +136,38 @@ def linear_layer_binary_cross_entropy_test():
 linear_layer_binary_cross_entropy_test()
 
 
+
+def batchnorm_1d():
+    batch_size = 5
+    num_features = 3
+    x = np.random.rand(batch_size,num_features)
+    
+    xt = torch.Tensor(x)
+    bnt = torch.nn.BatchNorm1d(num_features)
+    yt = bnt(xt)
+    yt.sum().backward()
+    ypt, xpt = yt, xt
+    
+    xnn = Variable(x)
+    bn1d = nn.BatchNorm1D(num_features)
+    ynn = bn1d.forward(xnn)
+    engine.backward_graph(ynn)
+    ymg, xmg = ynn, xnn
+    
+    if np.allclose(ymg.data, ypt.data.numpy()) and np.allclose(xmg.grad,xpt.grad.numpy()):
+        print(f"batchnorm_1d SUCCESS!")
+        return True # test success
+    
+    print(f"batchnorm_1d FAILED!")
+    #print(loss.data, loss1.data)
+    # forward pass went well
+    print(f"loss:\ndlf: {ymg.data}\ntorch: {ypt.data.numpy()}")
+    # backward pass went well
+    #print(f"grad:\n{xmg.grad}\n{xpt.grad.numpy()}")
+    
+    return False
+    
+batchnorm_1d()
 
 
 #NOTE: TORCH CELOSS EXPECTS LOGITS!! NOT PROBABILITIES (SOFTMAX OUTPUT)
