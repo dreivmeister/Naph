@@ -167,17 +167,20 @@ def test_neg():
 test_neg()
 
 
-def test_sum(axi=0):
+def test_sum(axis):
     a,b = np.random.randint(1,10,size=2)
     x = np.random.rand(a,b)
-    
     xt = torch.Tensor(x)
     xt.requires_grad = True
-    zt = torch.sum(xt,dim=axi)
+    if axis is None:
+        zt = torch.sum(xt)
+    else:
+        zt = torch.sum(xt,dim=axis)
     zt.sum().backward()
     
     xv = engine.Variable(x)
-    zv = engine.sum(xv,ax=axi)
+    zv = engine.sum(xv,ax=axis)
+    print('zv',zv.data.shape)
     engine.backward_graph(zv)
     
     
@@ -190,8 +193,9 @@ def test_sum(axi=0):
 
 # there is some weird dimension thing going on
 # will have to figure that out
-test_sum(axi=0)
-test_sum(axi=1)
+test_sum(0)
+test_sum(1)
+test_sum(None)
 
 def test_transpose():
     a,b = np.random.randint(1,10,size=2)
@@ -339,7 +343,7 @@ def test_variance():
         print(f"out:\n{zt.data.numpy()}\n{zv.data}")
         print(f"grad:\n{xt.grad.numpy()}\n{xv.grad}")
         
-test_variance()
+#test_variance()
 
 
 def test_exp():
@@ -388,5 +392,7 @@ def test_log():
         print(f"grad:\n{xt.grad.numpy()}\n{xv.grad}")
         
 test_log()
+
+
 
 

@@ -39,7 +39,9 @@ class LinearLayer(Module):
         return [self.w, self.b]
 
 
-
+class Conv1D(Module):
+    def __init__(self) -> None:
+        super().__init__()
 
 class BatchNorm1D(Module):
     def __init__(self, num_features) -> None:
@@ -77,8 +79,6 @@ class Dropout(Module):
 
 
 
-
-
 # misc functions and classes like:
 # losses, optimizers, convencience utilities and so on
 # regression loss
@@ -89,6 +89,7 @@ def mean_squared_error(out, target):
     n = out.data.shape[1]*out.data.shape[0]
     r = out - target
     return Variable(1/n) * engine.sum(r*r)
+    
     
 # multi class classification
 def cross_entropy(out, targets, eps=1e-12):
@@ -112,6 +113,7 @@ def cross_entropy(out, targets, eps=1e-12):
     #out.data = np.clip(out.data, eps, 1. - eps)
     N = out.data.shape[0]
     ce = engine.sum(targets * engine.log(out+Variable(eps)))
+    print('ce',ce.data.shape)
     ce = Variable(-(1/N)) * ce
     return ce
     
@@ -121,6 +123,7 @@ def softmax(out):
     exp_sum = engine.sum(out_exp, ax=1)
     exp_sum = Variable(1.) / exp_sum
     return engine.transpose(engine.transpose(out_exp) * exp_sum)
+
 
 def hinge_loss(logits, targets):
     n = logits.data.shape[0]
@@ -132,11 +135,3 @@ def l2(model):
     for p in model.parameters():
         s = s + engine.sum(p*p)
     return s
-
-
-
-
-#TODO:
-#-regularization techniques (l1,l2,dropout,batchnorm)
-#-different optimiziers
-#-plotting          

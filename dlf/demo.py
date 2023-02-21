@@ -7,6 +7,7 @@ import torch
 import engine
 from engine import Variable
 import nn
+import optimizer
 
 from sklearn.datasets import make_moons
 
@@ -64,7 +65,8 @@ for i in range(120):
     engine.backward_graph(total_loss)
     
     learning_rate = 1.0 - 0.9*i/100
-    model.step(learning_rate)
+    optimizer.SGD_step(model.parameters(), learning_rate)
+    #model.step(learning_rate)
     
     if i % 10 == 0:
         print(f"loss: {total_loss.data[0]}")

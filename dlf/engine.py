@@ -29,6 +29,7 @@ class Variable():
             
             #TODO:
             #self.grad = Variable(np.zeros(data.shape),requires_grad=False)
+    
         
     def backward(self):
         self.backw_func(self.grad)
@@ -48,31 +49,11 @@ class Variable():
             raise ValueError('other needs to be a Variable')
 
             
-        def backward_function2(grad):
-            # Sum out added dims
-            ndims_added = grad.ndim - self.data.ndim
-            for _ in range(ndims_added):
-                grad = grad.sum(axis=0)
-
-            # Sum across broadcasted (but non-added dims)
-            for i, dim in enumerate(self.data.shape):
-                if dim == 1:
-                    grad = grad.sum(axis=i, keepdims=True)
-            
+        def backward_function(grad):
             self.grad = self.grad + grad
-            
-            ndims_added = grad.ndim - other.data.ndim
-            for _ in range(ndims_added):
-                grad = grad.sum(axis=0)
-
-            # Sum across broadcasted (but non-added dims)
-            for i, dim in enumerate(other.data.shape):
-                if dim == 1:
-                    grad = grad.sum(axis=i, keepdims=True)
-            
             other.grad = other.grad + grad
         
-        res = Variable(self.data + other.data, is_leaf=False, backw_func=backward_function2)
+        res = Variable(self.data + other.data, is_leaf=False, backw_func=backward_function)
         res.prev.extend([self,other])
         return res
                 
@@ -138,15 +119,16 @@ def sum(a, ax=None):
             at least one of them is not.')
     
     def backward_function(dy=1):
-        if a.data.shape[0] == a.data.shape[1]:
-            a.grad = a.grad + np.ones(a.data.shape)*dy.T
-        else:
+        if dy.ndim == 1:
+            dy = np.expand_dims(dy,axis=1)
             if ax == 0:
-                a.grad = a.grad + np.ones(a.data.T.shape)*dy
-            elif ax == 1:
-                a.grad = a.grad + np.ones(a.data.shape)*dy.T
+                a.grad = a.grad + np.ones(a.data.shape)*dy.T 
             else:
-                a.grad = a.grad + np.ones(a.data.shape)*dy.T
+                a.grad = a.grad + np.ones(a.data.shape)*dy
+        else:
+            a.grad = a.grad + np.ones(a.data.shape)*dy.T
+        
+        
     
     res = Variable(np.sum(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
@@ -243,19 +225,19 @@ def mean(a, ax=None):
     res.prev.append(a)
     return res
 
+
 def variance(a, ax=None):
     if not (isinstance(a,Variable)):
         raise ValueError('a needs to be a Variable object')
     
+    m = mean(a)
+    n = a.data.shape[0]*a.data.shape[1]
     def backward_function(dy):
-        m = mean(a)
-        a.grad += ((-2.*m.data)/(a.data.shape[0]*a.data.shape[1]))*dy
+        a.grad += ((2./n)*(a.data - m.data))*dy
     
     res = Variable(np.var(a.data, axis=ax), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
     return res
-        
-    
 
 
 def exp(a):
@@ -280,6 +262,8 @@ def log(a):
     res = Variable(np.log(a.data), is_leaf=False, backw_func=backward_function)
     res.prev.append(a)
     return res
+
+
 
 # topological sort algorithm to sort the DAG which is the
 # computational graph
