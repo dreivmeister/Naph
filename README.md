@@ -1,2 +1,3 @@
 # Naph
-Python/Julia library for numerical and graph algorithms
+
+Python library for numerical, graph, finite diff pde algorithms
