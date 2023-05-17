@@ -1,0 +1,29 @@
+str s = 'helloworld'
+print s
+
+num a = 1
+
+if a < 10:
+   if a > 10:
+      print a
+   end
+end
+
+if a == 1:
+   print '==10'
+end
+
+num i = 1
+while i < 10:
+   print i
+   i = i + 1
+end
+
+func f x:
+   print x
+   j + 2
+end
+
+str b = 'hello'
+num a = 10
+print b

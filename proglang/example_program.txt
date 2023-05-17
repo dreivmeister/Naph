@@ -1,0 +1,8 @@
+num a = 1
+num b = 2
+if 5 < 10:
+   print a
+else:
+   print b
+end
+

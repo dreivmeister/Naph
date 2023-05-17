@@ -291,4 +291,3 @@ def backward_graph(var):
     for var in reversed(tsorted):
         var.backward()
         
-        
