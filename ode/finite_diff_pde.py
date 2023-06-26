@@ -11,19 +11,17 @@ def initialize_u(max_iter_time,
                  boundary_cond = None, 
                  initial_cond = None):
     
+    if len(dim) == 1:
+        dimension = (max_iter_time, dim[0])
+    elif len(dim) == 2:
+        dimension = (max_iter_time, dim[0], dim[1])
+    
     if initial_cond[0] == 'fixed':
-        if len(dim) == 1:
-            u = np.full((max_iter_time,dim[0]), initial_cond[1])
-        elif len(dim) == 2:
-            u = np.full((max_iter_time, dim[0], dim[1]), initial_cond[1])    
+        u = np.full(dimension, initial_cond[1])
     elif initial_cond[0] == 'normal':
-        if len(dim) == 1:
-            u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, dim[0]))
-        elif len(dim) == 2:
-            u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=(max_iter_time, dim[0], dim[1]))
+        u = np.random.normal(loc=initial_cond[1], scale=initial_cond[2], size=dimension)
+        
     if boundary_cond[0] == 'dirichlet':
-        assert boundary_cond is not None
-        # Set the boundary conditions
         if len(dim) == 1:
             u[:, 0] = boundary_cond[1] #left
             u[:, -1] = boundary_cond[2] #right
@@ -94,6 +92,25 @@ def plot_u_3d(u):
     
     anim = animation.FuncAnimation(fig, animate, frames=max_iter_time, repeat=False)
     anim.save("pde_3d_solve.gif")    
+    
+class Solve:
+    def __init__(self, f, length, width, steps, i_cond, b_cond, plot, *args, **kwargs) -> None:
+        if width == 0:
+            u_init = initialize_u(max_iter_time=steps, dim=[length], boundary_cond=b_cond, initial_cond=i_cond)
+            u_result = calculate_u_1d(u_init, f)
+        else:
+            u_init = initialize_u(max_iter_time=steps, dim=[length, width], boundary_cond=b_cond, initial_cond=i_cond)
+            u_result = calculate_u_2d(u_init, f)
+        
+        if plot == '1D':
+            plot_u_1d(u_result)
+        elif plot == '2D':
+            plot_u_2d(u_result)
+        elif plot == '3D':
+            plot_u_3d(u_result)
+        
+        
+        
 
 if __name__=="__main__":
     plate_length = 50
@@ -111,10 +128,30 @@ if __name__=="__main__":
     initial_condition = ['fixed',50.0]
     plot = '2D'
     
-    u_init = initialize_u(max_iter_time=max_iter_time, dim=[plate_length,plate_width], boundary_cond=boundary_conditions, initial_cond=initial_condition)
+    # u_init = initialize_u(max_iter_time=max_iter_time, dim=[plate_length,plate_width], boundary_cond=boundary_conditions, initial_cond=initial_condition)
+    
+    # # define the pde in finite diff approximation
+    # def f(u,k):
+    #     A = u[k, 2:  , 1:-1] #i-1,j
+    #     B = u[k,  :-2, 1:-1] #i+1,j
+    #     C = u[k, 1:-1, 2:  ] #i,j-1
+    #     D = u[k, 1:-1,  :-2] #i,j+1
+    #     E = u[k, 1:-1, 1:-1] #i,j
+    #     F = u[k-1,1:-1,1:-1] #k-1,i,j
+    #     return gamma * (A+B+C+D-4*E) + 2*E - F #2d wave equation
+    
+    # u_result = calculate_u_2d(u_init, f)
     
     
-    # defines the pde
+    # if plot == '1D':
+    #     plot_u_1d(u_result)
+    # if plot == '2D':
+    #     plot_u_2d(u_result)
+    # elif plot == '3D':
+    #     plot_u_3d(u_result)
+    # print('SAVED')
+    
+    
     def f(u,k):
         A = u[k, 2:  , 1:-1] #i-1,j
         B = u[k,  :-2, 1:-1] #i+1,j
@@ -124,13 +161,4 @@ if __name__=="__main__":
         F = u[k-1,1:-1,1:-1] #k-1,i,j
         return gamma * (A+B+C+D-4*E) + 2*E - F #2d wave equation
     
-    u_result = calculate_u_2d(u_init, f)
-    
-    
-    if plot == '1D':
-        plot_u_1d(u_result)
-    if plot == '2D':
-        plot_u_2d(u_result)
-    elif plot == '3D':
-        plot_u_3d(u_result)
-    print('SAVED')
+    s = Solve(f, plate_length, plate_width, max_iter_time, initial_condition, boundary_conditions, '2D', gamma=gamma)

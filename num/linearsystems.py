@@ -8,8 +8,6 @@ import numpy as np
 def LU_partial_decomposition(matrix):
     # lu with partial pivoting
     n, _ = matrix.shape
-    #P = np.identity(n)
-    #L = np.identity(n)
     U = matrix.copy()
     PF = np.identity(n)
     LF = np.zeros((n,n))
@@ -17,6 +15,7 @@ def LU_partial_decomposition(matrix):
         index = np.argmax(abs(U[k:,k])) # find abs max of curr col
         index = index + k
         
+        # pivoting
         if index != k:
             P = np.identity(n)
             P[[index,k],k:n] = P[[k,index],k:n]
@@ -24,6 +23,7 @@ def LU_partial_decomposition(matrix):
             PF = np.dot(P,PF)
             LF = np.dot(P,LF)
         
+        #frobenius
         L = np.identity(n)
         for j in range(k+1,n):
             t = U[j,k] / U[k,k]
@@ -67,11 +67,11 @@ def LU_partial_solve(P,L,U,b):
 # A = [[2, 1, 1, 0], [4, 6, 3, 1], [8, 7, 3, 5], [6, 7, 9, 1]]
 # A = np.array(A)
 
-# #A = np.array([[1,2],[3,4]])
-# P1, L1, U1 = LU_partial_decomposition(A)
-# print(P1)
-# print(L1)
-# print(U1)
+A = np.array([[1,2],[3,4]])
+P1, L1, U1 = LU_partial_decomposition(A)
+print(P1)
+print(L1)
+print(U1)
 
 # b = np.array([1,3,3,1])
 # x = LU_partial_solve(P1,L1,U1,b)
@@ -111,7 +111,7 @@ def cholesky_decomposition(A):
 
 
 
-def householder_vectorized(a):
+def householder(a):
     """Use this version of householder to reproduce the output of np.linalg.qr 
     exactly (specifically, to match the sign convention it uses)
     
@@ -131,7 +131,7 @@ def qr_decomposition(A: np.ndarray):
     
     for j in range(0, n):
         # Apply Householder transformation.
-        v, tau = householder_vectorized(R[j:, j, np.newaxis])
+        v, tau = householder(R[j:, j, np.newaxis])
         H = np.identity(m)
         H[j:, j:] -= tau * (v @ v.T)
         R = H @ R
@@ -143,13 +143,6 @@ def overdetermined_linear_system_solve(A, b):
     bs = Q@b
     x = np.linalg.solve(R,bs)
     return x
-
-
-
-def svd(A):
-    pass
-
-
 
 if __name__=="__main__":
     # m = 5
@@ -179,11 +172,13 @@ if __name__=="__main__":
     
     # print(LU_partial_solve(p,l,u,b))
     
-    A = np.array([[3,7], 
-                  [0,12], 
-                  [4,1]])
+    # A = np.array([[3,7], 
+    #               [0,12], 
+    #               [4,1]])
     
-    q,r = qr_decomposition(A)
+    # q,r = qr_decomposition(A)
     
-    print(q)
-    print(r)
+    # print(q)
+    # print(r)
+    
+    pass

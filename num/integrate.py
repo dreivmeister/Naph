@@ -79,8 +79,7 @@ if __name__=="__main__":
     a=-1
     b=1
     # n = 100
-    # print(gauß_quadrature(f, a, b, n=3))
-    
+    print(gauß_quadrature(f, a, b, n=3))
     print(romberg_integration(f,a,b,5,5))
     
     
